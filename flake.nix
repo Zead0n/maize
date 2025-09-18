@@ -12,7 +12,7 @@
         (system: f { pkgs = import inputs.nixpkgs { inherit system; }; });
     in {
       devShells = forEachSupportedSystem ({ pkgs }: {
-        default = pkgs.mkShell { packages = with pkgs; [ zig zls lldb ]; };
+        default = pkgs.mkShell { packages = with pkgs; [ zig zls lldb qemu ]; };
       });
     };
 }
