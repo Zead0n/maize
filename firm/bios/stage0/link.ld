@@ -25,4 +25,18 @@ SECTIONS
     {
         *(.bss)
     }
+
+    . = 0x7c00 + 510;
+
+    .magic :
+    {
+        SHORT(0xaa55)
+    }
+
+    /DISCARD/ :
+    {
+        *(.comment)
+        *(.eh_frame)
+        *(.note.GNU-stack)
+    }
 }
