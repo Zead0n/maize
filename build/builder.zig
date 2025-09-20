@@ -15,7 +15,7 @@ pub const Builder = struct {
         });
         boot_mod.addAssemblyFile(stage_zero_dir.path(b, "boot.s"));
 
-        const boot_bin = b.addObject(.{
+        const boot_bin = b.addExecutable(.{
             .name = "boot.bin",
             .root_module = boot_mod,
         });
