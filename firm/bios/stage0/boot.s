@@ -1,4 +1,4 @@
-.section .boot, "awx"
+.section .text.boot
 .global  _start
 .code16
 
