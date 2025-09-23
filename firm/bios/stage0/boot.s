@@ -16,6 +16,8 @@ skip_bpb:
 	mov %ax, %fs
 	mov %ax, %gs
 
+	cld
+
 	mov $0x7c00, %sp
 
 a20:
