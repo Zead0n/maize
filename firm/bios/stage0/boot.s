@@ -28,9 +28,22 @@ a20:
 	and  $0xfe, %al
 	out  %al, $92
 
+after_a20:
+
 extention_check:
 
-after_a20:
+print:
+	mov $0x0e, %ah
+
+print_continue:
+	lodsb
+	cmp $0, %al
+	je  print_done
+	int $0x10
+	jmp print_continue
+
+print_done:
+	ret
 
 _end:
 	hlt
