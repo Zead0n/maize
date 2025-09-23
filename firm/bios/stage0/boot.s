@@ -48,7 +48,3 @@ print_done:
 _end:
 	hlt
 	jmp _end
-
-#
-.space 510 - ( . - _start)
-.word  0xaa55
