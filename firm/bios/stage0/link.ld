@@ -14,16 +14,19 @@ SECTIONS
     .data :
     {
         *(.data)
+        *(.data.*)
     }
 
     .rodata :
     {
         *(.rodata)
+        *(.rodata.*)
     }
 
     .bss :
     {
         *(.bss)
+        *(.bss.*)
     }
 
     . = 0x7c00 + 510;
