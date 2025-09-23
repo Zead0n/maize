@@ -3,6 +3,12 @@
 .code16
 
 _start:
+	jmp skip_bpb
+nop
+
+.space 64
+
+skip_bpb:
 	xor %ax, %ax
 	mov %ax, %ds
 	mov %ax, %es
