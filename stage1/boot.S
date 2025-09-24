@@ -1,14 +1,6 @@
 .section .text.boot
 .code16
 
-.macro print_and_err msg
-    mov $msg, %si
-    call print
-
-    hlt
-    jmp $ - 2
-.endm
-
 .global _start
 _start:
     jmp skip_bpb
@@ -28,9 +20,6 @@ skip_bpb:
     mov %ax, %gs
     mov $0x7c00, %sp
 
-    mov $msg, %si
-    call print
-
     cmp $0x80, %dl
     jb finish
 
@@ -40,9 +29,6 @@ skip_bpb:
 finish:
     hlt
     jmp finish
-
-floppy_err_msg:
-    .asciz "Maize does not support floppy disk"
 
 #include "print.S"
 #include "gdt.S"
