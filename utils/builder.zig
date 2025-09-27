@@ -17,7 +17,7 @@ pub const Builder = struct {
             .name = "boot.bin",
             .root_module = boot_mod,
         });
-        boot_bin.setLinkerScript(first_stage_dir.path(b, "link.ld"));
+        boot_bin.setLinkerScript(first_stage_dir.path(b, "link_stage1.ld"));
 
         return boot_bin;
     }
