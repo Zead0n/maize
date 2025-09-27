@@ -1,15 +1,15 @@
 const std = @import("std");
-const Architecture = @import("utils/arch.zig").Architecture;
-const Builder = @import("utils/builder.zig").Builder;
+const arch_util = @import("utils/arch.zig");
+const builder_util = @import("utils/builder.zig");
 const qemu_util = @import("utils/qemu.zig");
 
 pub fn build(b: *std.Build) void {
     // Options
-    const arch = b.option(Architecture, "arch", "Cpu architecture (defaults to x86)") orelse Architecture.x86;
+    const arch = b.option(arch_util.Architecture, "arch", "Cpu architecture (defaults to x86)") orelse arch_util.Architecture.x86;
     const optimize = b.standardOptimizeOption(.{});
 
     // Create Builder, it'll help keep the build.zig be concise
-    const builder = Builder{
+    const builder = builder_util.Builder{
         .target = b.resolveTargetQuery(arch.getTargetQuery()),
         .optimize = optimize,
     };
