@@ -7,18 +7,18 @@ pub const Builder = struct {
     pub fn buildBootloader(self: Builder, b: *std.Build) *std.Build.Step.Compile {
         const first_stage_dir = b.path("src/stage1");
 
-        const boot_mod = b.createModule(.{
+        const first_stage_mod = b.createModule(.{
             .target = self.target,
             .optimize = self.optimize,
         });
-        boot_mod.addAssemblyFile(first_stage_dir.path(b, "boot.S"));
+        first_stage_mod.addAssemblyFile(first_stage_dir.path(b, "boot.S"));
 
-        const boot_bin = b.addExecutable(.{
-            .name = "boot.bin",
-            .root_module = boot_mod,
+        const first_stage_bin = b.addExecutable(.{
+            .name = "first_stage.bin",
+            .root_module = first_stage_mod,
         });
-        boot_bin.setLinkerScript(first_stage_dir.path(b, "link_stage1.ld"));
+        first_stage_bin.setLinkerScript(first_stage_dir.path(b, "link_stage1.ld"));
 
-        return boot_bin;
+        return first_stage_bin;
     }
 };
