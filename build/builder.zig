@@ -5,7 +5,7 @@ pub const Builder = struct {
     optimize: std.builtin.OptimizeMode,
 
     pub fn buildBootloader(self: Builder, b: *std.Build) *std.Build.Step.Compile {
-        const first_stage_dir = b.path("stage1");
+        const first_stage_dir = b.path("src/stage1");
 
         const boot_mod = b.createModule(.{
             .target = self.target,
