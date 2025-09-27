@@ -10,19 +10,16 @@ SECTIONS
         *(.text.boot)
         *(.text)
     }
-
     .data :
     {
         *(.data)
         *(.data.*)
     }
-
     .rodata :
     {
         *(.rodata)
         *(.rodata.*)
     }
-
     .bss :
     {
         *(.bss)
