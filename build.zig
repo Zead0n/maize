@@ -1,6 +1,6 @@
 const std = @import("std");
-const Architecture = @import("build/arch.zig").Architecture;
-const Builder = @import("build/builder.zig").Builder;
+const Architecture = @import("utils/arch.zig").Architecture;
+const Builder = @import("utils/builder.zig").Builder;
 
 pub fn build(b: *std.Build) void {
     const arch = b.option(Architecture, "arch", "Cpu architecture (defaults to x86)") orelse Architecture.x86;
