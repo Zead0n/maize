@@ -8,7 +8,7 @@ pub fn build(b: *std.Build) void {
     const arch = b.option(arch_util.Architecture, "arch", "Cpu architecture (defaults to x86)") orelse arch_util.Architecture.x86;
     const optimize = b.standardOptimizeOption(.{});
 
-    // Create Builder, it'll help keep the build.zig be concise
+    // Create Builder, it'll keep build.zig concise
     const builder = builder_util.Builder{
         .target = b.resolveTargetQuery(arch.getTargetQuery()),
         .optimize = optimize,
