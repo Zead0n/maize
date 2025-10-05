@@ -17,16 +17,15 @@ pub fn build(b: *std.Build) void {
     // Bootloader step
     const bootloader_step = b.step("bootloader", "Build the bootloader");
     const bootloader = builder.buildBootloader(b);
-    const bootloader_install = b.addInstallBinFile(bootloader.getEmittedBin(), bootloader.name);
-    bootloader_step.dependOn(&bootloader_install.step);
+    bootloader_step.dependOn(&bootloader.step);
 
     // Qemu step
     const qemu_step = b.step("qemu", "Build and run bootloader in qemu");
     qemu_step.dependOn(&bootloader.step);
-    const qemu_cmd = qemu_util.createQemuCommand(b, bootloader);
+    const qemu_cmd = qemu_util.createQemuCommand(b, bootloader.source, arch.toStdArch());
     qemu_step.dependOn(&qemu_cmd.step);
 
     // Install step
     const install_step = b.getInstallStep();
-    install_step.dependOn(&bootloader_install.step);
+    install_step.dependOn(&bootloader.step);
 }
