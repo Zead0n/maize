@@ -4,7 +4,6 @@ const builder_util = @import("utils/builder.zig");
 const qemu_util = @import("utils/qemu.zig");
 
 pub fn build(b: *std.Build) void {
-    // Options
     const arch = b.option(arch_util.Architecture, "arch", "Cpu architecture (defaults to x86)") orelse arch_util.Architecture.x86;
     const optimize = b.standardOptimizeOption(.{});
 
