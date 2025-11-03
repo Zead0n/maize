@@ -61,11 +61,11 @@ sector:
     .quad 0x00000000
 
 info_prefix:
-    .asciz "Maize  [INFO]: "
+    .asciz "[INFO]  Maize: "
 warn_prefix:
-    .asciz "Maize  [WARN]: "
+    .asciz "[WARN]  Maize: "
 error_prefix:
-    .asciz "Maize [ERROR]: "
+    .asciz "[ERROR] Maize: "
 line_break:
     .asciz "\n\r"
 
