@@ -6,6 +6,12 @@ const BuildOptions = struct {
     optimize: std.builtin.OptimizeMode,
 };
 
+const BootStages = struct {
+    first: *std.Build.Step.Compile,
+    second: *std.Build.Step.Compile,
+    decompress: *std.Build.Step.Compile,
+};
+
 pub fn buildStage1(b: *std.Build, options: BuildOptions) *std.Build.Step.Compile {
     const first_stage_dir = b.path("src/stage1");
 
@@ -61,12 +67,6 @@ pub fn buildDecompress(b: *std.Build, options: BuildOptions) *std.Build.Step.Com
     return decompress_bin;
 }
 
-const BootStages = struct {
-    first: *std.Build.Step.Compile,
-    second: *std.Build.Step.Compile,
-    decompress: *std.Build.Step.Compile,
-};
-
 pub fn buildBootloader(b: *std.Build, stages: BootStages) *std.Build.Step.InstallFile {
     const boot_files = b.addWriteFiles();
     const boot_img = boot_files.add("boot.img", "");
@@ -75,7 +75,7 @@ pub fn buildBootloader(b: *std.Build, stages: BootStages) *std.Build.Step.Instal
         .of_lp = boot_img,
         .if_lp = stages.first.getEmittedBin(),
         .count = 1,
-        .conv = &.{"notrunc"},
+        .conv = &.{ "notrunc", "sync" },
     });
     first_dd.step.dependOn(&stages.first.step);
 
@@ -84,7 +84,7 @@ pub fn buildBootloader(b: *std.Build, stages: BootStages) *std.Build.Step.Instal
         .if_lp = stages.decompress.getEmittedBin(),
         .seek = 1,
         .count = 1,
-        .conv = &.{"notrunc"},
+        .conv = &.{ "notrunc", "sync" },
     });
     decompress_dd.step.dependOn(&stages.decompress.step);
 
@@ -93,14 +93,23 @@ pub fn buildBootloader(b: *std.Build, stages: BootStages) *std.Build.Step.Instal
         .if_lp = stages.second.getEmittedBin(),
         .seek = 2,
         .count = 30,
-        .conv = &.{"notrunc"},
+        .conv = &.{ "notrunc", "sync" },
     });
     second_dd.step.dependOn(&stages.second.step);
+
+    const padding_dd = dd_util.ddCmd(b, .{
+        .of_lp = boot_img,
+        .if_lp = std.Build.LazyPath{ .cwd_relative = "/dev/zero" },
+        .seek = 31,
+        .count = 1,
+        .conv = &.{ "notrunc", "sync" },
+    });
 
     const boot_img_install = b.addInstallBinFile(boot_img, "boot.img");
     boot_img_install.step.dependOn(&first_dd.step);
     boot_img_install.step.dependOn(&decompress_dd.step);
     boot_img_install.step.dependOn(&second_dd.step);
+    boot_img_install.step.dependOn(&padding_dd.step);
 
     return boot_img_install;
 }
