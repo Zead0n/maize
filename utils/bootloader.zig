@@ -105,11 +105,11 @@ pub fn buildBootloader(b: *std.Build, stages: BootStages) *std.Build.Step.Instal
         .conv = &.{ "notrunc", "sync" },
     });
 
-    const boot_img_install = b.addInstallBinFile(boot_img, "boot.img");
-    boot_img_install.step.dependOn(&first_dd.step);
-    boot_img_install.step.dependOn(&decompress_dd.step);
-    boot_img_install.step.dependOn(&second_dd.step);
-    boot_img_install.step.dependOn(&padding_dd.step);
+    const bootloader = b.addInstallBinFile(boot_img, "maize.img");
+    bootloader.step.dependOn(&first_dd.step);
+    bootloader.step.dependOn(&decompress_dd.step);
+    bootloader.step.dependOn(&second_dd.step);
+    bootloader.step.dependOn(&padding_dd.step);
 
-    return boot_img_install;
+    return bootloader;
 }
