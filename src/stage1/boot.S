@@ -1,9 +1,9 @@
 .section .text.boot
 .code16
 
-#define INFO(x) mov $info_prefix, %si; call print; mov $x, %si; call print; mov $line_break, %si; call print
-#define WARN(x) mov $warn_prefix, %si; call print; mov $x, %si; call print; mov $line_break, %si; call print
-#define ERR(x) mov $error_prefix, %si; call print; mov $x, %si; call print; mov $line_break, %si; jmp err
+#define LOG_INFO(x) mov $info_prefix, %si; call print; mov $x, %si; call print; mov $line_break, %si; call print
+#define LOG_WARN(x) mov $warn_prefix, %si; call print; mov $x, %si; call print; mov $line_break, %si; call print
+#define LOG_ERR(x) mov $error_prefix, %si; call print; mov $x, %si; call print; mov $line_break, %si; jmp err
 
 .global _start
 _start:
@@ -23,7 +23,7 @@ skip_bpb:
     cld
     sti
 
-    INFO(stack_msg)
+    LOG_INFO(stack_msg)
 
     jmp end
 
