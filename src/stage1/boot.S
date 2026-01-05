@@ -7,10 +7,6 @@
 
 .global _start
 _start:
-    jmp skip_bpb
-    nop
-
-skip_bpb:
     cli
 
     /* initialize stack */
@@ -25,14 +21,34 @@ skip_bpb:
 
     LOG_INFO(stack_msg)
 
+    /* Enable A20 line */
+    in $0x92, %al
+    test $2, %al
+    jnz a20_enabled
+    or $2, %al
+    and $0xfe, %al
+    out %al, $0x92
+    jmp a20_enabled
+
+a20_enabled:
     jmp end
+
+/* ---------- ERRORS ---------- */
+
+disk_err:
+    LOG_ERR(disk_err_msg)
+disk_err_msg:
+    .asciz "Dubious disk value"
 
 err:
     call print
 
+/* ---------- LOOP / HALT ---------- */
 end:
     hlt
     jmp end
+
+/* ---------- UTILITY ---------- */
 
 1:
     mov $0x0e, %ah
