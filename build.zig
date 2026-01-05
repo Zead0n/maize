@@ -1,7 +1,7 @@
 const std = @import("std");
-const arch_util = @import("utils/arch.zig");
-const bootloader_util = @import("utils/bootloader.zig");
-const qemu_util = @import("utils/qemu.zig");
+const arch_util = @import("build/arch.zig");
+const bootloader_util = @import("build/bootloader.zig");
+const qemu_util = @import("build/qemu.zig");
 
 pub fn build(b: *std.Build) void {
     const arch = b.option(arch_util.Architecture, "arch", "Cpu architecture (defaults to x86)") orelse arch_util.Architecture.x86;
