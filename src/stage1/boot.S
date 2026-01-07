@@ -88,5 +88,3 @@ line_break:
 stack_msg:
     .asciz "Stack initialized"
 
-.space 510 - (. - _start)
-.word 0xaa55

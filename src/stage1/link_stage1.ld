@@ -25,12 +25,12 @@ SECTIONS
         *(.bss.*)
     }
 
-    /* . = 0x7c00 + 510; */
-    /**/
-    /* .magic : */
-    /* { */
-    /*     SHORT(0xaa55) */
-    /* } */
+    . = 0x7c00 + 510;
+
+    .magic :
+    {
+        SHORT(0xaa55)
+    }
 
     /DISCARD/ :
     {
