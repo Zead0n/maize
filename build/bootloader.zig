@@ -1,5 +1,6 @@
 const std = @import("std");
 const dd_util = @import("dd.zig");
+const gzip_util = @import("gzip.zig");
 
 const BuildOptions = struct {
     target: std.Build.ResolvedTarget,
@@ -48,7 +49,11 @@ pub fn buildStageTwo(b: *std.Build, options: BuildOptions) *std.Build.Step.Compi
     return second_stage_bin;
 }
 
-pub fn buildDecompress(b: *std.Build, options: BuildOptions) *std.Build.Step.Compile {
+pub fn buildDecompress(b: *std.Build, stage2_compile: *std.Build.Step.Compile, options: BuildOptions) *std.Build.Step.Compile {
+    const stage2_gzip = gzip_util.gzipCmd(b, stage2_compile.getEmittedBin(), .{ .level = .best });
+    stage2_gzip.step.dependOn(&stage2_compile.step);
+    const compressed_stage2 = stage2_gzip.captureStdOut();
+
     const decompress_dir = b.path("src/decompress");
 
     const decompress_mod = b.createModule(.{
@@ -57,12 +62,16 @@ pub fn buildDecompress(b: *std.Build, options: BuildOptions) *std.Build.Step.Com
         .root_source_file = decompress_dir.path(b, "decompress.zig"),
     });
     decompress_mod.addAssemblyFile(decompress_dir.path(b, "entry.S"));
+    decompress_mod.addAnonymousImport("stage2.gz", .{
+        .root_source_file = compressed_stage2,
+    });
 
     const decompress_bin = b.addExecutable(.{
         .name = "decompress.bin",
         .root_module = decompress_mod,
     });
     decompress_bin.setLinkerScript(decompress_dir.path(b, "decompress.ld"));
+    decompress_bin.step.dependOn(&stage2_gzip.step);
 
     return decompress_bin;
 }
