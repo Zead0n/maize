@@ -8,9 +8,9 @@ const BuildOptions = struct {
 };
 
 const BootStages = struct {
-    first: *std.Build.Step.Compile,
-    second: *std.Build.Step.Compile,
-    decompress: *std.Build.Step.Compile,
+    first: std.Build.LazyPath,
+    second: std.Build.LazyPath,
+    decompress: std.Build.LazyPath,
 };
 
 pub fn buildStage1(b: *std.Build, options: BuildOptions) *std.Build.Step.Compile {
@@ -23,7 +23,7 @@ pub fn buildStage1(b: *std.Build, options: BuildOptions) *std.Build.Step.Compile
     first_stage_mod.addAssemblyFile(first_stage_dir.path(b, "boot.S"));
 
     const first_stage_bin = b.addExecutable(.{
-        .name = "stage1.bin",
+        .name = "stage1.elf",
         .root_module = first_stage_mod,
     });
     first_stage_bin.setLinkerScript(first_stage_dir.path(b, "link_stage1.ld"));
@@ -41,7 +41,7 @@ pub fn buildStageTwo(b: *std.Build, options: BuildOptions) *std.Build.Step.Compi
     });
 
     const second_stage_bin = b.addExecutable(.{
-        .name = "stage2.bin",
+        .name = "stage2.elf",
         .root_module = second_stage_mod,
     });
     second_stage_bin.setLinkerScript(second_stage_dir.path(b, "link_stage2.ld"));
@@ -49,9 +49,8 @@ pub fn buildStageTwo(b: *std.Build, options: BuildOptions) *std.Build.Step.Compi
     return second_stage_bin;
 }
 
-pub fn buildDecompress(b: *std.Build, stage2_compile: *std.Build.Step.Compile, options: BuildOptions) *std.Build.Step.Compile {
-    const stage2_gzip = gzip_util.gzipCmd(b, stage2_compile.getEmittedBin(), .{ .level = .best });
-    stage2_gzip.step.dependOn(&stage2_compile.step);
+pub fn buildDecompress(b: *std.Build, stage2_lp: std.Build.LazyPath, options: BuildOptions) *std.Build.Step.Compile {
+    const stage2_gzip = gzip_util.gzipCmd(b, stage2_lp, .{ .level = .best });
     const compressed_stage2 = stage2_gzip.captureStdOut();
 
     const decompress_dir = b.path("src/decompress");
@@ -67,7 +66,7 @@ pub fn buildDecompress(b: *std.Build, stage2_compile: *std.Build.Step.Compile, o
     });
 
     const decompress_bin = b.addExecutable(.{
-        .name = "decompress.bin",
+        .name = "decompress.elf",
         .root_module = decompress_mod,
     });
     decompress_bin.setLinkerScript(decompress_dir.path(b, "decompress.ld"));
@@ -80,33 +79,7 @@ pub fn buildBootloader(b: *std.Build, stages: BootStages) *std.Build.Step.Instal
     const boot_files = b.addWriteFiles();
     const boot_img = boot_files.add("boot.img", "");
 
-    const first_dd = dd_util.ddCmd(b, .{
-        .of_lp = boot_img,
-        .if_lp = stages.first.getEmittedBin(),
-        .count = 1,
-        .conv = &.{ "notrunc", "sync" },
-    });
-    first_dd.step.dependOn(&stages.first.step);
-
-    const decompress_dd = dd_util.ddCmd(b, .{
-        .of_lp = boot_img,
-        .if_lp = stages.decompress.getEmittedBin(),
-        .seek = 1,
-        .count = 1,
-        .conv = &.{ "notrunc", "sync" },
-    });
-    decompress_dd.step.dependOn(&stages.decompress.step);
-
-    const second_dd = dd_util.ddCmd(b, .{
-        .of_lp = boot_img,
-        .if_lp = stages.second.getEmittedBin(),
-        .seek = 2,
-        .count = 30,
-        .conv = &.{ "notrunc", "sync" },
-    });
-    second_dd.step.dependOn(&stages.second.step);
-
-    const padding_dd = dd_util.ddCmd(b, .{
+    const init_dd = dd_util.ddCmd(b, .{
         .of_lp = boot_img,
         .if_lp = std.Build.LazyPath{ .cwd_relative = "/dev/zero" },
         .seek = 31,
@@ -114,11 +87,34 @@ pub fn buildBootloader(b: *std.Build, stages: BootStages) *std.Build.Step.Instal
         .conv = &.{ "notrunc", "sync" },
     });
 
+    const first_dd = dd_util.ddCmd(b, .{
+        .of_lp = boot_img,
+        .if_lp = stages.first,
+        .count = 1,
+        .conv = &.{ "notrunc", "sync" },
+    });
+
+    const decompress_dd = dd_util.ddCmd(b, .{
+        .of_lp = boot_img,
+        .if_lp = stages.decompress,
+        .seek = 1,
+        .count = 1,
+        .conv = &.{ "notrunc", "sync" },
+    });
+
+    const second_dd = dd_util.ddCmd(b, .{
+        .of_lp = boot_img,
+        .if_lp = stages.second,
+        .seek = 2,
+        .count = 30,
+        .conv = &.{ "notrunc", "sync" },
+    });
+
     const bootloader = b.addInstallBinFile(boot_img, "maize.img");
+    bootloader.step.dependOn(&init_dd.step);
     bootloader.step.dependOn(&first_dd.step);
     bootloader.step.dependOn(&decompress_dd.step);
     bootloader.step.dependOn(&second_dd.step);
-    bootloader.step.dependOn(&padding_dd.step);
 
     return bootloader;
 }
