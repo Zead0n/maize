@@ -1,6 +1,5 @@
 .extern bss_begin
 .extern bss_end
-.extern entry
 
 .section .entry
 .align 16
@@ -11,7 +10,7 @@ _start:
     xor %al, %al
     mov bss_begin, %edi
     mov bss_end, %ecx
-    sub bss_begin, %edi
+    sub bss_begin, %ecx
     rep stosb
 
-    jmp entry
+    call decompress_entry

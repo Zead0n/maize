@@ -1,14 +1,21 @@
 const std = @import("std");
+const compressed_stage2 = @embedFile("stage2.gz");
 
-export fn entry(compressed_stage2: [*]u8, stage2_size: usize) callconv(.c) noreturn {
-    const dest: *u8 = @ptrFromInt(0xf000);
+export fn decompress_entry() noreturn {
+    const stage2_addr: usize = 0xf000;
+    const dest: [*]u8 = @ptrFromInt(stage2_addr);
+    const dest_buf = dest[0 .. 1048 * 64];
 
-    const read_buffer: []u8 = compressed_stage2[0..stage2_size];
-    var reader = std.io.Reader.fixed(read_buffer);
+    var compressed_reader = std.Io.Reader.fixed(compressed_stage2);
+    var writer = std.Io.Writer.fixed(dest_buf);
 
-    _ = std.compress.flate.Decompress.init(&reader, .gzip, @ptrCast(dest));
+    const decompress = std.compress.flate.Decompress.init(&compressed_reader, .gzip, &.{});
+    var reader: *std.Io.Reader = @constCast(&decompress.reader);
 
-    while (true) {}
+    _ = reader.streamRemaining(&writer) catch @panic("Failed to decompress stage2");
+
+    while (true)
+        asm volatile ("hlt");
 
     unreachable;
 }
