@@ -28,9 +28,17 @@ _start:
     or $2, %al
     and $0xfe, %al
     out %al, $0x92
-    jmp a20_enabled
 
 a20_enabled:
+    mov $0x41, %ah
+    mov $0x55aa, %bx
+    int $0x13
+    jnc ext_pass
+    mov $ext_err_msg, %si
+    call err
+
+ext_pass:
+    LOG_INFO(valid_msg)
     jmp end
 
 /* ---------- ERRORS ---------- */
@@ -39,6 +47,10 @@ disk_err:
     LOG_ERR(disk_err_msg)
 disk_err_msg:
     .asciz "Dubious disk value"
+ext_err:
+    LOG_ERR(ext_err_msg)
+ext_err_msg:
+    .asciz "No ext"
 
 err:
     call print
@@ -87,4 +99,6 @@ line_break:
 
 stack_msg:
     .asciz "Stack initialized"
+valid_msg:
+    .asciz "Extention compatible, procceding..."
 
