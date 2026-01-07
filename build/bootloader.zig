@@ -1,6 +1,6 @@
 const std = @import("std");
-const dd_util = @import("dd.zig");
-const gzip_util = @import("gzip.zig");
+const dd_util = @import("commands/dd.zig");
+const gzip_util = @import("commands/gzip.zig");
 
 const BuildOptions = struct {
     target: std.Build.ResolvedTarget,
