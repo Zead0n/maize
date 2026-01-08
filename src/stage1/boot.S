@@ -102,3 +102,7 @@ stack_msg:
 valid_msg:
     .asciz "Extention compatible, procceding..."
 
+.space 510 - (. - _start)
+.word 0xaa55
+
+.incbin "stages/decompress.bin"
