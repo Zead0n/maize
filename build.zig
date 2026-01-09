@@ -25,20 +25,19 @@ pub fn build(b: *std.Build) void {
         .target = target_query,
         .optimize = .ReleaseSmall,
     });
-    const stage2_bin = b.addObjCopy(stage1_elf.getEmittedBin(), .{ .format = .bin });
+    const stage2_bin = b.addObjCopy(stage2_elf.getEmittedBin(), .{ .format = .bin });
     stage2_bin.step.dependOn(&stage2_elf.step);
 
     const decompress_elf = bootloader_util.buildDecompress(b, stage2_bin.getOutput(), .{
         .target = target_query,
         .optimize = .ReleaseSmall,
     });
-    const decompress_bin = b.addObjCopy(stage1_elf.getEmittedBin(), .{ .format = .bin });
+    const decompress_bin = b.addObjCopy(decompress_elf.getEmittedBin(), .{ .format = .bin });
     decompress_bin.step.dependOn(&decompress_elf.step);
 
     const bootloader = bootloader_util.buildBootloader(b, .{
         .first = stage1_bin.getOutput(),
         .decompress = decompress_bin.getOutput(),
-        .second = stage2_bin.getOutput(),
     });
 
     // Stages step
