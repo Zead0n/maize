@@ -59,7 +59,7 @@ pub fn buildDecompress(b: *std.Build, stage2_lp: std.Build.LazyPath, options: Bu
         .optimize = options.optimize,
         .root_source_file = decompress_dir.path(b, "decompress.zig"),
     });
-    decompress_mod.addAssemblyFile(decompress_dir.path(b, "entry.S"));
+    decompress_mod.addAssemblyFile(decompress_dir.path(b, "start.S"));
     decompress_mod.addAnonymousImport("stage2.gz", .{
         .root_source_file = compressed_stage2,
     });
@@ -97,15 +97,7 @@ pub fn buildBootloader(b: *std.Build, stages: BootStages) *std.Build.Step.Instal
         .of_lp = boot_img,
         .if_lp = stages.decompress,
         .seek = 1,
-        .count = 1,
-        .conv = &.{ "notrunc", "sync" },
-    });
-
-    const second_dd = dd_util.ddCmd(b, .{
-        .of_lp = boot_img,
-        .if_lp = stages.second,
-        .seek = 2,
-        .count = 30,
+        .count = 31,
         .conv = &.{ "notrunc", "sync" },
     });
 
@@ -113,7 +105,6 @@ pub fn buildBootloader(b: *std.Build, stages: BootStages) *std.Build.Step.Instal
     bootloader.step.dependOn(&init_dd.step);
     bootloader.step.dependOn(&first_dd.step);
     bootloader.step.dependOn(&decompress_dd.step);
-    bootloader.step.dependOn(&second_dd.step);
 
     return bootloader;
 }
