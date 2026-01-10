@@ -149,17 +149,17 @@ read.fallback:
     movw %ax, max_sector
 
     /* Get LBA */
-    movw 8(%si), %ax
+    movw %ds:8(%si), %ax
     test %ax, %ax
     jnz read.failed
-    movw 10(%si), %ax
+    movw %ds:10(%si), %ax
     test %ax, %ax
     jnz read.failed
-    movw 12(%si), %ax
+    movw %ds:12(%si), %ax
     test %ax, %ax
     jnz read.failed
 
-    movw 14(%si), %ax
+    movw %ds:14(%si), %ax
 
     /* Calculate sector */
     xorw %dx, %dx
@@ -187,10 +187,10 @@ read.fallback:
     mov %al, %dh
 
     /* Set segment:offset */
-    mov 6(%si), %es
-    mov 4(%si), %bx
+    mov %ds:6(%si), %es
+    mov %ds:4(%si), %bx
 
-    movb 3(%si), %al
+    movb %ds:3(%si), %al
     movb $2, %ah
 
     int $0x13
