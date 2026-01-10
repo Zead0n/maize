@@ -1,9 +1,8 @@
 .section .text.boot
 .code16
 
-#define LOG_INFO(x) mov $info_prefix, %si; call print; mov $x, %si; call print; mov $line_break, %si; call print
-#define LOG_WARN(x) mov $warn_prefix, %si; call print; mov $x, %si; call print; mov $line_break, %si; call print
-#define LOG_ERR(x) mov $error_prefix, %si; call print; mov $x, %si; call print; mov $line_break, %si; jmp err
+#define INFO(x) mov $x, %si; call print
+#define ERROR(x) mov $x, %si; call print; jmp end
 
 .global _start
 _start:
@@ -14,12 +13,15 @@ _start:
     mov %ax, %ds
     mov %ax, %es
     mov %ax, %ss
-    mov $0x7c00, %sp
+    movw $0x7c00, %sp
 
     cld
     sti
 
-    LOG_INFO(stack_msg)
+    INFO(stack_msg)
+
+    /* Store disk number */
+    movb %dl, drive_num
 
     /* Enable A20 line */
     in $0x92, %al
@@ -30,38 +32,61 @@ _start:
     out %al, $0x92
 
 a20_enabled:
-    mov $0x41, %ah
-    mov $0x55aa, %bx
-    int $0x13
-    jnc ext_pass
-    mov $ext_err_msg, %si
-    call err
+    INFO(a20_msg)
 
-ext_pass:
-    LOG_INFO(valid_msg)
-    jmp end
+    mov drive_num, %dl
+    mov $disk_address_packet, %si
+    call read
+    jc read_err
+
+    INFO(read_msg)
+    INFO(pmode_msg)
+
+    cli
+    lgdt gdtr
+
+    movl %cr0, %eax
+    orl $1, %eax
+    movl %eax, %cr0
+
+    ljmp $0x08, $pmode
+
+.code32
+
+pmode:
+    mov $0x10, %ax
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+    mov %ax, %ss
+
+    jmp 0x40000
+    hlt
+
+.code16
+
+#include "gdt.S"
 
 /* ---------- ERRORS ---------- */
 
-disk_err:
-    LOG_ERR(disk_err_msg)
-disk_err_msg:
-    .asciz "Dubious disk value"
-ext_err:
-    LOG_ERR(ext_err_msg)
-ext_err_msg:
-    .asciz "No ext"
+read_err:
+    ERROR(read_err_msg)
 
-err:
-    call print
+/* ---------- END / SPIN ---------- */
 
-/* ---------- LOOP / HALT ---------- */
 end:
     hlt
     jmp end
 
 /* ---------- UTILITY ---------- */
 
+/*
+ * 'call print'
+ *
+ * INPUT:
+ * %si = Null terminated string
+ */
 1:
     mov $0x0e, %ah
     int $0x10
@@ -69,6 +94,121 @@ print:
     lodsb
     cmp $0, %al
     jne 1b
+    ret
+
+/*
+ * 'call read'
+ *
+ * Read with DAP (AH = 0x42, INT = 0x13).
+ * Fallback to CHS (AH = 0x02, INT = 0x13).
+ * Errors if both failed.
+ *
+ * INPUT:
+ * %ds:%si = Data packet address
+ * %dl = Drive number
+ *
+ * RETURN:
+ * `Carry` set if error
+ */
+read:
+    push %dx
+
+    /* Check if hard drive */
+    cmpb $0x80, %dl
+    jb read.fallback
+
+    /* Check for LBA support */
+    movw $0x55aa, %bx
+    movb $0x41, %ah
+    int $0x13
+
+    jc read.fallback
+    cmpw $0xaa55, %bx
+    jne read.fallback
+    testb $0x01, %cl
+    jz read.fallback
+
+    pop %dx
+
+    movb $0x42, %ah
+    int $0x13
+    jc read.failed
+    jmp read.return
+read.fallback:
+    mov $0x08, %ah
+    int $0x13
+    jc read.failed
+
+    /* Store head */
+    movzbw %dh, %ax
+    incw %ax
+    movw %ax, max_head
+
+    /* Store cylinders */
+    movzbw %cl, %dx
+    shlw $2, %dx
+    mov %dh, %ah
+    mov %ch, %al
+    incw %ax
+    movw %ax, max_cylinder
+
+    /* Store sectors */
+    movzbw %dl, %ax
+    shrw $2, %ax
+    movw %ax, max_sector
+
+    /* Get LBA */
+    movw 8(%si), %ax
+    test %ax, %ax
+    jnz read.failed
+    movw 10(%si), %ax
+    test %ax, %ax
+    jnz read.failed
+    movw 12(%si), %ax
+    test %ax, %ax
+    jnz read.failed
+
+    movw 14(%si), %ax
+
+    /* Calculate sector */
+    xorw %dx, %dx
+    divw max_sector
+    movb %dl, %cl
+    incb %cl                 /* Sectors are 1-based */
+
+    xorw %dx, %dx
+    divw max_head
+
+    /* Calculate cylinder */
+    cmpw max_cylinder, %ax
+    jg read.failed
+
+    movb %al, %ch
+    xorb %al, %al
+    shrw $2, %ax
+    orb %al, %cl
+
+    /* Set head (%dl already contains the head) */
+    movb %dl, %al
+
+    pop %dx
+
+    mov %al, %dh
+
+    /* Set segment:offset */
+    mov 6(%si), %es
+    mov 4(%si), %bx
+
+    movb 3(%si), %al
+    movb $2, %ah
+
+    int $0x13
+    jc read.failed
+
+    jmp read.return
+read.failed:
+    stc
+read.return:
     ret
 
 /* ---------- VARIABLES ---------- */
@@ -80,29 +220,31 @@ disk_address_packet:
     .byte 0x10
     .byte 0x00
 num_sectors:
-    .word 0x0040
+    .word 31
 offset:
     .word 0x0000
 segment:
-    .word 0x1000
+    .word 0x4000
 sector:
-    .quad 0x00000000
+    .long 0x00000001
 
-info_prefix:
-    .asciz "[INFO]  Maize: "
-warn_prefix:
-    .asciz "[WARN]  Maize: "
-error_prefix:
-    .asciz "[ERROR] Maize: "
-line_break:
-    .asciz "\n\r"
+max_head:
+    .word 0x0000
+max_cylinder:
+    .word 0x0000
+max_sector:
+    .word 0x0000
 
 stack_msg:
-    .asciz "Stack initialized"
-valid_msg:
-    .asciz "Extention compatible, procceding..."
+    .asciz "[INFO]  Maize: Stack\n\r"
+a20_msg:
+    .asciz "[INFO]  Maize: A20\n\r"
+read_msg:
+    .asciz "[INFO]  Maize: Read\n\r"
+pmode_msg:
+    .asciz "[INFO]  Maize: Pmode\n\r"
+read_err_msg:
+    .asciz "[ERROR] Maize: Read failed\n\r"
 
 .space 510 - (. - _start)
 .word 0xaa55
-
-.incbin "stages/decompress.bin"
