@@ -1,7 +1,7 @@
 const std = @import("std");
 const data = @embedFile("stage2");
 
-export fn decompress() linksection(".text") noreturn {
+export fn decompress() noreturn {
     var reader = std.Io.Reader.fixed(data);
     const stage2_addr: usize = 0xc000;
     var dest: [*]u8 = @ptrFromInt(stage2_addr);
