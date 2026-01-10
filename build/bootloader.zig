@@ -9,7 +9,6 @@ const BuildOptions = struct {
 
 const BootStages = struct {
     first: std.Build.LazyPath,
-    second: std.Build.LazyPath,
     decompress: std.Build.LazyPath,
 };
 
