@@ -1,9 +1,6 @@
 .section .text.boot
 .code16
 
-#define INFO(x) mov $x, %si; call print
-#define ERROR(x) mov $x, %si; call print; jmp end
-
 .global _start
 _start:
     cli
@@ -18,8 +15,6 @@ _start:
     cld
     sti
 
-    INFO(stack_msg)
-
     /* Store disk number */
     movb %dl, drive_num
 
@@ -32,15 +27,10 @@ _start:
     out %al, $0x92
 
 a20_enabled:
-    INFO(a20_msg)
-
     mov drive_num, %dl
     mov $disk_address_packet, %si
     call read
     jc read_err
-
-    INFO(read_msg)
-    INFO(pmode_msg)
 
     cli
     lgdt gdtr
@@ -62,7 +52,6 @@ pmode:
     mov %ax, %ss
 
     jmp 0x40000
-    hlt
 
 .code16
 
@@ -71,7 +60,9 @@ pmode:
 /* ---------- ERRORS ---------- */
 
 read_err:
-    ERROR(read_err_msg)
+    mov $read_err_msg, %si
+    call print
+    jmp end
 
 /* ---------- END / SPIN ---------- */
 
@@ -235,16 +226,8 @@ max_cylinder:
 max_sector:
     .word 0x0000
 
-stack_msg:
-    .asciz "[INFO]  Maize: Stack\n\r"
-a20_msg:
-    .asciz "[INFO]  Maize: A20\n\r"
-read_msg:
-    .asciz "[INFO]  Maize: Read\n\r"
-pmode_msg:
-    .asciz "[INFO]  Maize: Pmode\n\r"
 read_err_msg:
-    .asciz "[ERROR] Maize: Read failed\n\r"
+    .asciz "Read err\n\r"
 
 .space 510 - (. - _start)
 .word 0xaa55
