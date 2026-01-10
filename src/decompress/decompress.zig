@@ -22,7 +22,7 @@ export fn decompress() linksection(".text") noreturn {
 }
 
 // WARN: Somethings wrong with the decompress functionallity with zig
-// so we'll have to embed and load the uncompressed version of stage2.
+// so the uncompressed version of stage2 needs to be embedded and loaded.
 // Maybe this will work in the future.
 //
 // export fn broken_decompress() linksection(".text") noreturn {
