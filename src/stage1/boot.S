@@ -211,7 +211,7 @@ disk_address_packet:
     .byte 0x10
     .byte 0x00
 num_sectors:
-    .word 31
+    .word 63
 offset:
     .word 0x0000
 segment:
