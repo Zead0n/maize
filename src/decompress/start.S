@@ -1,8 +1,7 @@
 .extern bss_begin
 .extern bss_end
 
-.section .entry
-.align 16
+.section .text.start
 .global _start
 _start:
     cld
@@ -13,4 +12,4 @@ _start:
     sub bss_begin, %ecx
     rep stosb
 
-    call decompress_entry
+    jmp decompress

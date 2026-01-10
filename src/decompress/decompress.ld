@@ -2,12 +2,13 @@ ENTRY(_start)
 
 SECTIONS
 {
-    . = 0x70000;
+    . = 0x40000;
 
     .text :
     {
-        *(.entry)
-        *(.text .text.*)
+        *(.text.start)
+        *(.text)
+        *(.text.*)
     }
 
     .rodata :
@@ -15,11 +16,13 @@ SECTIONS
         *(.rodata)
         *(.rodata.*)
     }
+
     .data :
     {
         *(.data)
         *(.data.*)
     }
+
     .bss :
     {
         bss_begin = .;

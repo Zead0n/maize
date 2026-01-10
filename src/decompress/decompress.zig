@@ -1,21 +1,51 @@
 const std = @import("std");
-const compressed_stage2 = @embedFile("stage2.gz");
+const data = @embedFile("stage2");
 
-export fn decompress_entry() noreturn {
-    const stage2_addr: usize = 0xf000;
-    const dest: [*]u8 = @ptrFromInt(stage2_addr);
-    const dest_buf = dest[0 .. 1048 * 64];
+export fn decompress() linksection(".text") noreturn {
+    var reader = std.Io.Reader.fixed(data);
+    const stage2_addr: usize = 0xc000;
+    var dest: [*]u8 = @ptrFromInt(stage2_addr);
 
-    var compressed_reader = std.Io.Reader.fixed(compressed_stage2);
-    var writer = std.Io.Writer.fixed(dest_buf);
+    var i: usize = 0;
+    while (reader.takeByte()) |byte| : (i += 1) {
+        dest[i] = byte;
+    } else |_| {}
 
-    const decompress = std.compress.flate.Decompress.init(&compressed_reader, .gzip, &.{});
-    var reader: *std.Io.Reader = @constCast(&decompress.reader);
-
-    _ = reader.streamRemaining(&writer) catch @panic("Failed to decompress stage2");
+    asm volatile (
+        \\jmp 0xc000
+    );
 
     while (true)
         asm volatile ("hlt");
 
     unreachable;
 }
+
+// WARN: Somethings wrong with the decompress functionallity with zig
+// so we'll have to embed and load the uncompressed version of stage2.
+// Maybe this will work in the future.
+//
+// export fn broken_decompress() linksection(".text") noreturn {
+//     var decom_buf: [std.compress.flate.max_window_len]u8 = undefined;
+//     var compressed_reader = std.Io.Reader.fixed(data);
+//
+//     const decompressed = std.compress.flate.Decompress.init(&compressed_reader, .gzip, &decom_buf);
+//     var reader: *std.Io.Reader = @constCast(&decompressed.reader);
+//
+//     const stage2_addr: usize = 0xc000;
+//     var dest: [*]u8 = @ptrFromInt(stage2_addr);
+//
+//     var i: usize = 0;
+//     while (reader.takeByte()) |byte| : (i += 1) {
+//         dest[i] = byte;
+//     } else |_| {}
+//
+//     asm volatile (
+//         \\jmp 0xc000
+//     );
+//
+//     while (true)
+//         asm volatile ("hlt");
+//
+//     unreachable;
+// }
