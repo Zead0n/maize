@@ -114,3 +114,10 @@ read.failed:
     stc
 read.return:
     ret
+
+max_head:
+    .word 0x0000
+max_cylinder:
+    .word 0x0000
+max_sector:
+    .word 0x0000

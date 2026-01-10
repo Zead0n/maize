@@ -89,13 +89,6 @@ segment:
 sector:
     .long 0x00000001
 
-max_head:
-    .word 0x0000
-max_cylinder:
-    .word 0x0000
-max_sector:
-    .word 0x0000
-
 read_err_msg:
     .asciz "Read err\n\r"
 
