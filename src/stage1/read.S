@@ -38,7 +38,7 @@ read:
     jc read.failed
     jmp read.return
 read.fallback:
-/* NOTE: Maybe a CHS as a fallback in the future? */
+/* NOTE: Maybe implement CHS as a fallback in the future? */
     nop
 read.failed:
     stc
