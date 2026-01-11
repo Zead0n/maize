@@ -20,8 +20,8 @@ export fn decompress() noreturn {
     unreachable;
 }
 
-// WARN: Somethings wrong with the decompress functionallity with zig
-// so the uncompressed version of stage2 needs to be embedded and loaded.
+// WARN: Somethings wrong with decompressing, is it a zig thing?
+// The uncompressed version of stage2 needs to be embedded and loaded.
 // Maybe this will work in the future.
 //
 // export fn decompress() noreturn {
