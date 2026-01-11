@@ -1,9 +1,18 @@
+const console = @import("console.zig");
+
 export fn _start() callconv(.naked) noreturn {
     asm volatile (
-        \\movw %%ax, (0xb8000)
+        \\jmp %[stage2_entry:P]
         :
-        : [char] "{ax}" (0x0f5a),
+        : [stage2_entry] "X" (&stage2_entry),
     );
+
+    unreachable;
+}
+
+noinline fn stage2_entry() callconv(.c) noreturn {
+    console.clear();
+    console.printString("Hello maize");
 
     while (true)
         asm volatile ("hlt");
