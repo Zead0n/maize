@@ -81,7 +81,7 @@ pub fn buildBootloader(b: *std.Build, stages: BootStages) *std.Build.Step.Instal
     const init_dd = dd_util.ddCmd(b, .{
         .of_lp = boot_img,
         .if_lp = std.Build.LazyPath{ .cwd_relative = "/dev/zero" },
-        .count = 32,
+        .count = 16,
         .conv = &.{ "notrunc", "sync" },
     });
 
@@ -96,7 +96,7 @@ pub fn buildBootloader(b: *std.Build, stages: BootStages) *std.Build.Step.Instal
         .of_lp = boot_img,
         .if_lp = stages.decompress,
         .seek = 1,
-        .count = 31,
+        .count = 15,
         .conv = &.{ "notrunc", "sync" },
     });
 
