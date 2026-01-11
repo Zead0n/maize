@@ -57,15 +57,9 @@ pmode:
 
 #include "gdt.S"
 
-/* ---------- ERRORS ---------- */
-
 read_err:
     mov $read_err_msg, %si
     call print
-    jmp end
-
-/* ---------- END / SPIN ---------- */
-
 end:
     hlt
     jmp end
@@ -209,15 +203,15 @@ drive_num:
 
 disk_address_packet:
     .byte 0x10
-    .byte 0x00
+    .byte 0
 num_sectors:
     .word 31
 offset:
-    .word 0x0000
+    .word 0
 segment:
     .word 0x4000
 sector:
-    .long 0x00000001
+    .long 1
 
 max_head:
     .word 0x0000
