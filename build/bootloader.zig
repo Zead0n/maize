@@ -49,8 +49,11 @@ pub fn buildStageTwo(b: *std.Build, options: BuildOptions) *std.Build.Step.Compi
 }
 
 pub fn buildDecompress(b: *std.Build, stage2_lp: std.Build.LazyPath, options: BuildOptions) *std.Build.Step.Compile {
-    // const stage2_gzip = gzip_util.gzipCmd(b, stage2_lp, .{ .level = .best });
-    // const compressed_stage2 = stage2_gzip.captureStdOut();
+    const stage2_gzip = gzip_util.gzipCmd(b, stage2_lp, .{ .level = .best });
+    const compressed_stage2 = stage2_gzip.captureStdOut();
+
+    // NOTE: Decompression isn't functionable, see 'src/decompress/decompress.zig' for more details
+    _ = compressed_stage2;
 
     const decompress_dir = b.path("src/decompress");
 
@@ -61,6 +64,7 @@ pub fn buildDecompress(b: *std.Build, stage2_lp: std.Build.LazyPath, options: Bu
     });
     decompress_mod.addAssemblyFile(decompress_dir.path(b, "start.S"));
     decompress_mod.addAnonymousImport("stage2", .{
+        // TODO: If and when decompression is figured out, replace 'stage2_lp' with 'compressed_stage2'
         .root_source_file = stage2_lp,
     });
 
@@ -69,7 +73,7 @@ pub fn buildDecompress(b: *std.Build, stage2_lp: std.Build.LazyPath, options: Bu
         .root_module = decompress_mod,
     });
     decompress_bin.setLinkerScript(decompress_dir.path(b, "decompress.ld"));
-    // decompress_bin.step.dependOn(&stage2_gzip.step);
+    decompress_bin.step.dependOn(&stage2_gzip.step);
 
     return decompress_bin;
 }
