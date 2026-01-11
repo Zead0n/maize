@@ -17,9 +17,6 @@ export fn decompress() noreturn {
         : [stage2] "X" (stage2_addr),
     );
 
-    while (true)
-        asm volatile ("hlt");
-
     unreachable;
 }
 
