@@ -5,7 +5,7 @@
 _start:
     cli
 
-    /* initialize stack */
+    /* Initialize stack */
     xor %ax, %ax
     mov %ax, %ds
     mov %ax, %es
@@ -27,11 +27,15 @@ _start:
     out %al, $0x92
 
 a20_enabled:
+    /* Retrieve disk number and set DAP */
     mov drive_num, %dl
     mov $disk_address_packet, %si
+
+    /* Perform read */
     call read
     jc read_err
 
+    /* Switch to Protected mode */
     cli
     lgdt gdtr
 
@@ -44,6 +48,7 @@ a20_enabled:
 .code32
 
 pmode:
+    /* Set data segments */
     mov $0x10, %ax
     mov %ax, %ds
     mov %ax, %es
@@ -51,6 +56,7 @@ pmode:
     mov %ax, %gs
     mov %ax, %ss
 
+    /* Transfer control to (what should be) the decompressor */
     jmp 0x40000
 
 .code16
@@ -69,7 +75,7 @@ end:
 /* ---------- VARIABLES ---------- */
 
 read_err_msg:
-    .asciz "Read err\n\r"
+    .asciz "! Read\n\r"
 
 drive_num:
     .byte 0x00
