@@ -1,15 +1,19 @@
 const std = @import("std");
-const stage2_data = @embedFile("stage2");
 
 export fn decompress() noreturn {
-    var reader = std.Io.Reader.fixed(stage2_data);
+    const stage2_data = @embedFile("stage2");
     const stage2_addr: usize = 0xc000;
+
+    var reader = std.Io.Reader.fixed(stage2_data);
     var dest: [*]u8 = @ptrFromInt(stage2_addr);
 
     var i: usize = 0;
     while (reader.takeByte()) |byte| : (i += 1) {
         dest[i] = byte;
-    } else |_| {}
+    } else |err| switch (err) {
+        error.EndOfStream => {},
+        else => {}, // TODO: Implement panic when error other than 'EndOfStream' occurs
+    }
 
     asm volatile (
         \\jmp %[stage2:P]
