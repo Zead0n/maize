@@ -72,8 +72,6 @@ end:
 #include "read.S"
 #include "gdt.S"
 
-/* ---------- VARIABLES ---------- */
-
 read_err_msg:
     .asciz "! Read\n\r"
 
