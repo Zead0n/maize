@@ -12,12 +12,13 @@ const BootStages = struct {
     decompress: std.Build.LazyPath,
 };
 
-pub fn buildStage1(b: *std.Build, options: BuildOptions) *std.Build.Step.Compile {
+pub fn buildStageOne(b: *std.Build, options: BuildOptions) *std.Build.Step.Compile {
     const first_stage_dir = b.path("src/stage1");
 
     const first_stage_mod = b.createModule(.{
         .target = options.target,
         .optimize = options.optimize,
+        .root_source_file = first_stage_dir.path(b, "first_stage.zig"),
     });
     first_stage_mod.addAssemblyFile(first_stage_dir.path(b, "boot.S"));
 

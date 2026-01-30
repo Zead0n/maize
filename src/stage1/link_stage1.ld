@@ -25,17 +25,26 @@ SECTIONS
         *(.bss.*)
     }
 
-    /* . = 0x7c00 + 510; */
-    /**/
-    /* .magic : */
-    /* { */
-    /*     SHORT(0xaa55) */
-    /* } */
-
-    /DISCARD/ :
+    . = 0x7dbe;
+    .partition_table :
     {
-        *(.comment)
-        *(.eh_frame)
-        *(.note.GNU-stack)
+        /* partition table entry 0 */
+        QUAD(0x80000000)
+        QUAD(0)
+        /* partition table entry 1 */
+        QUAD(0)
+        QUAD(0)
+        /* partition table entry 2 */
+        QUAD(0)
+        QUAD(0)
+        /* partition table entry 3 */
+        QUAD(0)
+        QUAD(0)
+    }
+
+    . = 0x7dfe;
+    .magic :
+    {
+        SHORT(0xaa55)
     }
 }
