@@ -18,9 +18,9 @@ pub fn buildStageOne(b: *std.Build, options: BuildOptions) *std.Build.Step.Compi
     const first_stage_mod = b.createModule(.{
         .target = options.target,
         .optimize = options.optimize,
-        .root_source_file = first_stage_dir.path(b, "first_stage.zig"),
+        .root_source_file = first_stage_dir.path(b, "main.zig"),
     });
-    first_stage_mod.addAssemblyFile(first_stage_dir.path(b, "boot.S"));
+    first_stage_mod.addAssemblyFile(first_stage_dir.path(b, "entry.S"));
 
     const first_stage_bin = b.addExecutable(.{
         .name = "stage1.elf",
