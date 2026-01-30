@@ -47,4 +47,11 @@ SECTIONS
     {
         SHORT(0xaa55)
     }
+
+    /DISCARD/ :
+    {
+        *(.comment)
+        *(.eh_frame*)
+        *(.note .note.*)
+    }
 }
