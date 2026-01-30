@@ -1,6 +1,11 @@
 const std = @import("std");
 const Arch = std.Target.Cpu.Arch;
 
+pub const Stage = enum {
+    First,
+    Second,
+};
+
 pub const Architecture = enum {
     x86,
 
@@ -10,11 +15,11 @@ pub const Architecture = enum {
         };
     }
 
-    pub fn getTargetQuery(self: Architecture) std.Target.Query {
+    pub fn getTargetQuery(self: Architecture, abi: std.Target.Abi) std.Target.Query {
         var query: std.Target.Query = .{
             .cpu_arch = self.toStdArch(),
             .os_tag = .freestanding,
-            .abi = .none,
+            .abi = abi,
         };
 
         switch (self) {

@@ -5,7 +5,7 @@ const qemu_util = @import("build/commands/qemu.zig");
 
 pub fn build(b: *std.Build) void {
     const arch = b.option(arch_util.Architecture, "arch", "Cpu architecture (defaults to x86)") orelse arch_util.Architecture.x86;
-    const target_query = b.resolveTargetQuery(arch.getTargetQuery());
+    const target_query = b.resolveTargetQuery(arch.getTargetQuery(.none));
 
     const stages_dir: std.Build.InstallDir = .{ .custom = "stages" };
     const stages_install_dir: std.Build.Step.InstallArtifact.Options = .{
@@ -14,8 +14,8 @@ pub fn build(b: *std.Build) void {
         },
     };
 
-    const stage1_elf = bootloader_util.buildStage1(b, .{
-        .target = target_query,
+    const stage1_elf = bootloader_util.buildTest(b, .{
+        .target = b.resolveTargetQuery(arch.getTargetQuery(.code16)),
         .optimize = .ReleaseSmall,
     });
     const stage1_bin = b.addObjCopy(stage1_elf.getEmittedBin(), .{ .format = .bin });
