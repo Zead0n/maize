@@ -29,7 +29,7 @@ SECTIONS
     .partition_table :
     {
         /* partition table entry 0 */
-        QUAD(0x80000000)
+        QUAD(0)
         QUAD(0)
         /* partition table entry 1 */
         QUAD(0)

@@ -1,56 +1,39 @@
 const std = @import("std");
-const utils = @import("utils.zig");
 const dap = @import("dap.zig");
+const utils = @import("utils");
+const teletype = utils.teletype;
 
-const PartitionEntry = packed struct {
-    boot_flag: u8,
-    begin_head: u8,
-    begin_sector: u6,
-    begin_cylinder: u10,
-    system_id: u8,
-    end_head: u8,
-    end_sector: u6,
-    end_cylinder: u10,
-    lba: u32,
-    total_sectors: u32,
+const STAGE_TWO_DEST = 0x8000;
+const DAP: dap.DiskAddressPacket = .{
+    .lba = 1,
+    .blocks = 7,
+    .offset = STAGE_TWO_DEST,
+    .segment = 0,
 };
 
-export fn first_stage(drive: u16) noreturn {
-    const stage2_dest = 0x8000;
-    const dap_entry: dap.DiskAddressPacket = .{
-        .lba = 1,
-        .blocks = 15,
-        .segment = (stage2_dest >> 4),
-        .offset = 0,
-    };
-    dap_entry.read(drive) catch @panic("!R");
+export var drive: u8 = 0;
 
-    asm volatile ("jmp %[stage2_addr:P]"
+export fn first_stage() noreturn {
+    if (!dap.check_ext13(drive)) @panic("!E");
+    // dap_entry.read(drive) catch @panic("!R");
+    if (DAP.read(drive)) |err_code| {
+        teletype.put(err_code);
+        @panic("!R");
+    }
+
+    asm volatile ("jmp %[stage2_addr:a]"
         :
-        : [stage2_addr] "X" (stage2_dest),
+        : [stage2_addr] "X" (STAGE_TWO_DEST),
     );
 
-    @panic("!1");
+    asm volatile ("hlt");
 
-    // const limit: u64 = 0xffff | (0xf << 48);
-    // const flags: u64 = (0b1100 << 52);
-    // const access: u64 = (0b10010010 << 40);
-    // const executable: u64 = (1 << 43);
-    //
-    // const base_descriptor = limit | flags | access;
-    // const gdt_entry = &gdt.Gdt{
-    //     .code = base_descriptor | executable,
-    //     .data = base_descriptor,
-    // };
-    //
-    // asm volatile ("cli");
-    // gdt.load(gdt_entry);
-    // gdt.enable_pmode();
+    @panic("!1");
 }
 
 pub const panic = std.debug.FullPanic(fail);
 pub fn fail(msg: []const u8, _: ?usize) noreturn {
-    utils.println(msg);
+    teletype.println(msg);
 
     while (true)
         asm volatile ("hlt");
