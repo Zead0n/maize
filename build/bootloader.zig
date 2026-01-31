@@ -15,12 +15,19 @@ const BootStages = struct {
 pub fn buildStageOne(b: *std.Build, options: BuildOptions) *std.Build.Step.Compile {
     const first_stage_dir = b.path("src/stage1");
 
+    const utils_mod = b.createModule(.{
+        .target = options.target,
+        .optimize = options.optimize,
+        .root_source_file = b.path("utils/realmode/lib.zig"),
+    });
+
     const first_stage_mod = b.createModule(.{
         .target = options.target,
         .optimize = options.optimize,
         .root_source_file = first_stage_dir.path(b, "main.zig"),
     });
     first_stage_mod.addAssemblyFile(first_stage_dir.path(b, "entry.S"));
+    first_stage_mod.addImport("utils", utils_mod);
 
     const first_stage_bin = b.addExecutable(.{
         .name = "stage1.elf",
@@ -34,11 +41,18 @@ pub fn buildStageOne(b: *std.Build, options: BuildOptions) *std.Build.Step.Compi
 pub fn buildStageTwo(b: *std.Build, options: BuildOptions) *std.Build.Step.Compile {
     const second_stage_dir = b.path("src/stage2");
 
+    const utils_mod = b.createModule(.{
+        .target = options.target,
+        .optimize = options.optimize,
+        .root_source_file = b.path("utils/realmode/lib.zig"),
+    });
+
     const second_stage_mod = b.createModule(.{
         .target = options.target,
         .optimize = options.optimize,
         .root_source_file = second_stage_dir.path(b, "main.zig"),
     });
+    second_stage_mod.addImport("utils", utils_mod);
 
     const second_stage_bin = b.addExecutable(.{
         .name = "stage2.elf",
@@ -86,7 +100,7 @@ pub fn buildBootloader(b: *std.Build, stages: BootStages) *std.Build.Step.Instal
     const init_dd = dd_util.ddCmd(b, .{
         .of_lp = boot_img,
         .if_lp = std.Build.LazyPath{ .cwd_relative = "/dev/zero" },
-        .count = 16,
+        .count = 8,
         .conv = &.{ "notrunc", "sync" },
     });
 
