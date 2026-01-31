@@ -1,18 +1,22 @@
-const console = @import("console.zig");
+const std = @import("std");
+const utils = @import("utils");
+const teletype = utils.teletype;
 
 export fn _start() callconv(.naked) noreturn {
-    asm volatile (
-        \\jmp %[stage2_entry:P]
+    asm volatile ("jmp %[stage2_entry:a]"
         :
         : [stage2_entry] "X" (&stage2_entry),
     );
-
-    unreachable;
 }
 
-noinline fn stage2_entry() callconv(.c) noreturn {
-    console.clear();
-    console.printString("Hello maize");
+fn stage2_entry() callconv(.c) noreturn {
+    @panic("Don't worry about it");
+}
+
+pub const panic = std.debug.FullPanic(fail);
+fn fail(msg: []const u8, _: ?usize) noreturn {
+    teletype.puts("MAIZE PANIC: ");
+    teletype.println(msg);
 
     while (true)
         asm volatile ("hlt");
