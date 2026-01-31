@@ -9,7 +9,7 @@ const BuildOptions = struct {
 
 const BootStages = struct {
     first: std.Build.LazyPath,
-    decompress: std.Build.LazyPath,
+    second: std.Build.LazyPath,
 };
 
 pub fn buildStageOne(b: *std.Build, options: BuildOptions) *std.Build.Step.Compile {
@@ -97,18 +97,18 @@ pub fn buildBootloader(b: *std.Build, stages: BootStages) *std.Build.Step.Instal
         .conv = &.{ "notrunc", "sync" },
     });
 
-    const decompress_dd = dd_util.ddCmd(b, .{
+    const second_dd = dd_util.ddCmd(b, .{
         .of_lp = boot_img,
-        .if_lp = stages.decompress,
+        .if_lp = stages.second,
         .seek = 1,
-        .count = 15,
+        .count = 7,
         .conv = &.{ "notrunc", "sync" },
     });
 
     const bootloader = b.addInstallBinFile(boot_img, "maize.img");
     bootloader.step.dependOn(&init_dd.step);
     bootloader.step.dependOn(&first_dd.step);
-    bootloader.step.dependOn(&decompress_dd.step);
+    bootloader.step.dependOn(&second_dd.step);
 
     return bootloader;
 }
