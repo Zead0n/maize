@@ -27,6 +27,13 @@ pub fn build(b: *std.Build) void {
     const stage2_bin = b.addObjCopy(stage2_elf.getEmittedBin(), .{ .format = .bin });
     stage2_bin.step.dependOn(&stage2_elf.step);
 
+    const bootloader = bootloader_util.buildBootloader(b, .{
+        .first = stage1_bin.getOutput(),
+        .second = stage2_bin.getOutput(),
+    });
+    bootloader.step.dependOn(&stage1_bin.step);
+    bootloader.step.dependOn(&stage2_bin.step);
+
     // Stages step
     const stages_step = b.step("stages", "Build only the stages, not the whole bootloader");
 
@@ -40,12 +47,12 @@ pub fn build(b: *std.Build) void {
     stages_step.dependOn(&stage2_bin_install.step);
 
     // Qemu step
-    // const qemu_step = b.step("qemu", "Build and run bootloader in qemu");
-    // const qemu_cmd = qemu_util.createQemuCommand(b, bootloader.source, arch.toStdArch());
-    // qemu_cmd.step.dependOn(&bootloader.step);
-    // qemu_step.dependOn(&qemu_cmd.step);
+    const qemu_step = b.step("qemu", "Build and run bootloader in qemu");
+    const qemu_cmd = qemu_util.createQemuCommand(b, bootloader.source, arch.toStdArch());
+    qemu_cmd.step.dependOn(&bootloader.step);
+    qemu_step.dependOn(&qemu_cmd.step);
 
     // Install step
-    // const install_step = b.getInstallStep();
-    // install_step.dependOn(&bootloader.step);
+    const install_step = b.getInstallStep();
+    install_step.dependOn(&bootloader.step);
 }
