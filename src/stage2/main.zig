@@ -1,5 +1,6 @@
 const std = @import("std");
 const utils = @import("utils");
+const a20 = @import("a20.zig");
 const teletype = utils.teletype;
 
 export fn _start() callconv(.naked) noreturn {
@@ -10,7 +11,7 @@ export fn _start() callconv(.naked) noreturn {
 }
 
 fn stage2_entry() callconv(.c) noreturn {
-    @panic("Don't worry about it");
+    if (!a20.enable()) @panic("Could not enable a20");
 }
 
 pub const panic = std.debug.FullPanic(fail);
