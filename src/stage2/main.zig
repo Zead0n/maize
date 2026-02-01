@@ -12,6 +12,8 @@ export fn _start() callconv(.naked) noreturn {
 
 fn stage2_entry() callconv(.c) noreturn {
     if (!a20.enable()) @panic("Could not enable a20");
+
+    @panic("Entry 2");
 }
 
 pub const panic = std.debug.FullPanic(fail);
