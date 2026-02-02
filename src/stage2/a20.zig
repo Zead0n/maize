@@ -35,8 +35,7 @@ fn check() bool {
     if (cpu.mem_inw(0, 0x7dfe) != cpu.mem_inw(0xffff, 0x7e0e))
         return true;
 
-    const flipped_byte = ~cpu.mem_inw(0, 0x7dfe);
-    cpu.mem_outw(0, 0x7dfe, flipped_byte);
+    cpu.mem_outw(0, 0x7dfe, ~cpu.mem_inw(0, 0x7dfe));
     if (cpu.mem_inw(0, 0x7dfe) != cpu.mem_inw(0xffff, 0x7e0e))
         return true;
 
