@@ -1,30 +1,45 @@
 const cpu = @import("cpu.zig");
 
-pub fn enable() bool {
-    if (check())
-        return true;
+pub fn enable() error{FailedA20}!void {
+    if (check()) return;
 
     asm volatile ("int $0x15"
         :
         : [a] "{ax}" (0x2401),
     );
 
-    if (check())
-        return true;
+    if (check()) return;
 
-    kbc_enable();
+    kbc_enable: {
+        cpu.disable_int();
+        defer cpu.enable_int();
 
-    if (check())
-        return true;
-
-    var byte = cpu.inb(0x92);
-    if ((byte & 0x02) == 0) {
-        byte |= 0x02;
-        byte &= 0xfe;
-        cpu.outb(0x92, byte);
+        if (!kbc_wait(2, 0)) break :kbc_enable;
+        cpu.outb(0x64, 0xad);
+        if (!kbc_wait(2, 0)) break :kbc_enable;
+        cpu.outb(0x64, 0xd0);
+        if (!kbc_wait(1, 1)) break :kbc_enable;
+        const kbc_byte = cpu.inb(0x60);
+        if (!kbc_wait(2, 0)) break :kbc_enable;
+        cpu.outb(0x64, 0xd1);
+        if (!kbc_wait(2, 0)) break :kbc_enable;
+        cpu.outb(0x64, kbc_byte | 2);
+        if (!kbc_wait(2, 0)) break :kbc_enable;
+        cpu.outb(0x64, 0xae);
     }
 
-    return check();
+    if (check()) return;
+
+    var fast_byte = cpu.inb(0x92);
+    if ((fast_byte & 0x02) == 0) {
+        fast_byte |= 0x02;
+        fast_byte &= 0xfe;
+        cpu.outb(0x92, fast_byte);
+    }
+
+    if (check()) return;
+
+    return error.FailedA20;
 }
 
 fn check() bool {
@@ -42,28 +57,10 @@ fn check() bool {
     return false;
 }
 
-fn kbc_enable() void {
-    cpu.disable_int();
-    defer cpu.enable_int();
-
-    if (!kbc_wait(2, 0)) return;
-    cpu.outb(0x64, 0xad);
-    if (!kbc_wait(2, 0)) return;
-    cpu.outb(0x64, 0xd0);
-    if (!kbc_wait(1, 1)) return;
-    const byte = cpu.inb(0x60);
-    if (!kbc_wait(2, 0)) return;
-    cpu.outb(0x64, 0xd1);
-    if (!kbc_wait(2, 0)) return;
-    cpu.outb(0x64, byte | 2);
-    if (!kbc_wait(2, 0)) return;
-    cpu.outb(0x64, 0xae);
-}
-
-fn kbc_wait(m: u8, ex: u8) bool {
+fn kbc_wait(mask: u8, expected: u8) bool {
     const timeout = 50000;
     for (0..timeout) |_| {
-        if ((cpu.inb(0x64) & m) == ex)
+        if ((cpu.inb(0x64) & mask) == expected)
             return true;
     }
 

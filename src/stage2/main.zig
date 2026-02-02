@@ -1,6 +1,7 @@
 const std = @import("std");
 const utils = @import("utils");
 const a20 = @import("a20.zig");
+const log = @import("log.zig");
 const teletype = utils.teletype;
 
 export fn _start() callconv(.naked) noreturn {
@@ -11,14 +12,14 @@ export fn _start() callconv(.naked) noreturn {
 }
 
 fn stage2_entry() callconv(.c) noreturn {
-    if (!a20.enable()) @panic("Could not enable a20");
+    a20.enable() catch @panic("Could not enable A20 line");
 
     @panic("Entry 2");
 }
 
 pub const panic = std.debug.FullPanic(fail);
 fn fail(msg: []const u8, _: ?usize) noreturn {
-    teletype.puts("MAIZE PANIC: ");
+    teletype.puts("Maize [PANIC]: ");
     teletype.println(msg);
 
     while (true)
