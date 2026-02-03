@@ -1,6 +1,7 @@
 const std = @import("std");
 const utils = @import("utils");
 const a20 = @import("a20.zig");
+const memmap = @import("memmap.zig");
 const log = @import("log.zig");
 const teletype = utils.teletype;
 
@@ -13,6 +14,11 @@ export fn _start() callconv(.naked) noreturn {
 
 fn stage2_entry() callconv(.c) noreturn {
     a20.enable() catch @panic("Could not enable A20 line");
+    _ = memmap.detect_memory() catch |err| switch (err) {
+        error.Unsupported => @panic("E820 unsupported"),
+        error.FailedMemoryMap => @panic("Failed to map memory"),
+        error.TooManyEntries => @panic("Too many memory maps"),
+    };
 
     @panic("Entry 2");
 }
