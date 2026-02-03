@@ -3,6 +3,15 @@
 
 .global _start
 _start:
+    jmp after_bpb
+    nop
+
+.org 0x03, 0x00
+bpb_start:
+    
+bpb_end:
+
+after_bpb:
     /* Initialize stack */
     xor %ax, %ax
     mov %ax, %ds
