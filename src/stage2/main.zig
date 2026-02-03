@@ -2,7 +2,6 @@ const std = @import("std");
 const utils = @import("utils");
 const a20 = @import("a20.zig");
 const memmap = @import("memmap.zig");
-const log = @import("log.zig");
 const teletype = utils.teletype;
 
 export fn _start() callconv(.naked) noreturn {
