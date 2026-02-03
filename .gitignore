@@ -4,3 +4,7 @@ zig-out/
 # direnv
 .direnv/
 .envrc
+
+# Bochs
+bochs.log
+bochsrc.txt
