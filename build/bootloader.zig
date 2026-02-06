@@ -1,4 +1,5 @@
 const std = @import("std");
+const arch_util = @import("arch.zig");
 const dd_util = @import("commands/dd.zig");
 const gzip_util = @import("commands/gzip.zig");
 
@@ -11,6 +12,79 @@ const BootStages = struct {
     first: std.Build.LazyPath,
     second: std.Build.LazyPath,
 };
+
+pub fn buildBiosBootloader(b: *std.Build, arch: arch_util.Architecture) *std.Build.Step.InstallFile {
+    const bios_dir = b.path("src/bios");
+
+    // Stage1
+    const stage1_mod = b.createModule(.{
+        .target = b.resolveTargetQuery(arch.getTargetQuery(.code16)),
+        .optimize = .ReleaseSmall,
+        .root_source_file = bios_dir.path(b, "stage1/main.zig"),
+    });
+    stage1_mod.addAssemblyFile(bios_dir.path(b, "stage1/entry.S"));
+
+    const stage1_elf = b.addExecutable(.{
+        .name = "stage1.elf",
+        .root_module = stage1_mod,
+    });
+
+    const stage1_bin = b.addObjCopy(stage1_elf.getEmittedBin(), .{
+        .basename = "stage1.bin",
+        .format = .bin,
+        .pad_to = 512,
+    });
+
+    // Stage2
+    const stage2_mod = b.createModule(.{
+        .target = b.resolveTargetQuery(arch.getTargetQuery(.code16)),
+        .optimize = .ReleaseSmall,
+        .root_source_file = bios_dir.path(b, "stage2/main.zig"),
+    });
+
+    const stage2_elf = b.addExecutable(.{
+        .name = "stage2.elf",
+        .root_module = stage2_mod,
+    });
+
+    const stage2_bin = b.addObjCopy(stage2_elf.getEmittedAsm(), .{
+        .basename = "stage2.bin",
+        .format = .bin,
+        .pad_to = 4096,
+    });
+
+    const boot_files = b.addWriteFiles();
+    const boot_img = boot_files.add("boot.img", "");
+
+    const init_dd = dd_util.ddCmd(b, .{
+        .of_lp = boot_img,
+        .if_lp = std.Build.LazyPath{ .cwd_relative = "/dev/zero" },
+        .count = 2048,
+        .conv = &.{ "notrunc", "sync" },
+    });
+
+    const first_dd = dd_util.ddCmd(b, .{
+        .of_lp = boot_img,
+        .if_lp = stage1_bin.getOutput(),
+        .count = 1,
+        .conv = &.{ "notrunc", "sync" },
+    });
+
+    const second_dd = dd_util.ddCmd(b, .{
+        .of_lp = boot_img,
+        .if_lp = stage2_bin.getOutput(),
+        .seek = 1,
+        .count = 2047,
+        .conv = &.{ "notrunc", "sync" },
+    });
+
+    const bootloader = b.addInstallBinFile(boot_img, b.fmt("maize-bios-{s}.img", .{@tagName(arch)}));
+    bootloader.step.dependOn(&init_dd.step);
+    bootloader.step.dependOn(&first_dd.step);
+    bootloader.step.dependOn(&second_dd.step);
+
+    return bootloader;
+}
 
 pub fn buildStageOne(b: *std.Build, options: BuildOptions) *std.Build.Step.Compile {
     const first_stage_dir = b.path("src/stage1");

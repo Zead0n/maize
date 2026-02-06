@@ -13,11 +13,19 @@ export fn _start() callconv(.naked) noreturn {
 
 fn stage2_entry() callconv(.c) noreturn {
     a20.enable() catch @panic("Could not enable A20 line");
-    _ = memmap.detect_memory() catch |err| switch (err) {
+    const memory_map = memmap.detect_memory() catch |err| switch (err) {
         error.Unsupported => @panic("E820 unsupported"),
         error.FailedMemoryMap => @panic("Failed to map memory"),
         error.TooManyEntries => @panic("Too many memory maps"),
     };
+
+    teletype.put(1);
+    teletype.put(2);
+    teletype.put(' ');
+
+    for (memory_map) |mem_entry| {
+        teletype.put(@truncate(@intFromEnum(mem_entry.type)));
+    }
 
     @panic("Entry 2");
 }

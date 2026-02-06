@@ -7,10 +7,19 @@ const SmapError = error{
     TooManyEntries,
 };
 
+const MemoryType = enum(u32) {
+    Null = 0,
+    Free = 1,
+    Reserved = 2,
+    Reclaimable = 3,
+    NonVolatile = 4,
+    Bad = 5,
+};
+
 const SmapEntry = packed struct {
     base: u64,
     length: u64,
-    type: u32,
+    type: MemoryType,
     acpi: u32,
 };
 
