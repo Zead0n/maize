@@ -1,8 +1,7 @@
 const std = @import("std");
-const utils = @import("utils");
 const a20 = @import("a20.zig");
 const memmap = @import("memmap.zig");
-const teletype = utils.teletype;
+const teletype = @import("../teletype.zig");
 
 export fn _start() callconv(.naked) noreturn {
     asm volatile ("jmp %[stage2_entry:a]"
