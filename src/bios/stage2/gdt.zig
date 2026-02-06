@@ -7,11 +7,6 @@ pub const GlobalDescriptorEntry = packed struct {
     base_24_31: u8,
 };
 
-const Gdtr = packed struct {
-    size: u16,
-    ptr: *anyopaque,
-};
-
 pub const NULL_DESCRIPTOR = GlobalDescriptorEntry{
     .limit_0_15 = 0,
     .limit_16_19 = 0,
@@ -37,39 +32,10 @@ pub const KERNEL_DATA_SEGMENT_32 = GlobalDescriptorEntry{
     .flags = 0b1100,
 };
 
-pub fn enable_unreal() void {
-    var ds: u32 = 0;
-    var ss: u32 = 0;
-    asm volatile (
-        \\mov %%ds, %[ds]
-        \\mov %%ss, %[ss]
-        : [ds] "=r" (ds),
-          [ss] "=r" (ss),
-    );
-    defer asm volatile (
-        \\ mov %[ds], %%ds
-        \\ mov %[ss], %%ss
-        :
-        : [ds] "r" (ds),
-          [ss] "r" (ss),
-    );
-
-    write_cr0(read_cr0() | 1);
-
-    asm volatile (
-        \\mov %%bx, %%ds
-        \\mov %%bx, %%ss
-        \\sti
-        :
-        : [seg] "{bx}" (0x10),
-    );
-
-    write_cr0(read_cr0() & 0xfffe);
-}
-
-fn enable_pmode() void {
-    write_cr0(read_cr0() | 1);
-}
+const Gdtr = packed struct {
+    size: u16,
+    ptr: *anyopaque,
+};
 
 pub fn load_gdt(descriptors: []GlobalDescriptorEntry) void {
     const gdtr = Gdtr{
@@ -81,18 +47,5 @@ pub fn load_gdt(descriptors: []GlobalDescriptorEntry) void {
         \\lgdt %[gdtp:a]
         :
         : [gdtp] "X" (&gdtr),
-    );
-}
-
-fn read_cr0() u32 {
-    return asm volatile ("mov %%cr0, %[ret]"
-        : [ret] "=r" (-> u32),
-    );
-}
-
-fn write_cr0(value: u32) void {
-    return asm volatile ("mov %[val], %%cr0"
-        :
-        : [val] "r" (value),
     );
 }

@@ -1,9 +1,9 @@
 const std = @import("std");
 const gdt = @import("gdt.zig");
 const a20 = @import("a20.zig");
-const cpu = @import("cpu.zig");
 const console = @import("console.zig");
 const memmap = @import("memmap.zig");
+const mode = @import("mode.zig");
 
 const GDT = [_]gdt.GlobalDescriptorEntry{
     gdt.NULL_DESCRIPTOR,
@@ -14,27 +14,23 @@ const GDT = [_]gdt.GlobalDescriptorEntry{
 export fn _start() callconv(.naked) noreturn {
     asm volatile ("jmp %[stage2_entry:a]"
         :
-        : [stage2_entry] "X" (&stage2_entry),
+        : [stage2_entry] "X" (&stageTwoEntry),
     );
 }
 
-fn stage2_entry() callconv(.c) noreturn {
-    cpu.disable_int();
-    gdt.load_gdt(@constCast(&GDT));
-    gdt.enable_unreal();
-    cpu.enable_int();
-
+fn stageTwoEntry() callconv(.c) noreturn {
+    mode.enableUnreal(@constCast(&GDT));
     console.clear();
-
     a20.enable() catch @panic("Could not enable A20 line");
-    const memory_map = memmap.detect_memory() catch |err| switch (err) {
+
+    const memory_map = memmap.detectMemory() catch |err| switch (err) {
         error.Unsupported => @panic("E820 unsupported"),
         error.FailedMemoryMap => @panic("Failed to map memory"),
         error.TooManyEntries => @panic("Too many memory maps"),
     };
 
     for (memory_map) |mem_entry| {
-        console.print("Base: 0x{x} | Length: 0x{x} | Type: {s}\n", .{ mem_entry.base, mem_entry.length, @tagName(mem_entry.type) });
+        console.print("Base: 0x{x: <8} | Length: 0x{x: <8} | Type: {s}\n", .{ mem_entry.base, mem_entry.length, @tagName(mem_entry.type) });
     }
 
     @panic("Entry 2");

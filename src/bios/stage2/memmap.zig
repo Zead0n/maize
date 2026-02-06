@@ -23,7 +23,7 @@ const SmapEntry = packed struct {
     acpi: u32,
 };
 
-pub fn detect_memory() SmapError![]SmapEntry {
+pub fn detectMemory() SmapError![]SmapEntry {
     var entries: [MAX_E820_ENTRIES]SmapEntry = undefined;
     var entries_count: usize = 0;
 
