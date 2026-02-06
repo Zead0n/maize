@@ -28,12 +28,13 @@ pub fn buildBiosBootloader(b: *std.Build, arch: arch_util.Architecture) *std.Bui
         .name = "stage1.elf",
         .root_module = stage1_mod,
     });
+    stage1_elf.setLinkerScript(bios_dir.path(b, "stage1/link_stage1.ld"));
 
     const stage1_bin = b.addObjCopy(stage1_elf.getEmittedBin(), .{
         .basename = "stage1.bin",
         .format = .bin,
-        .pad_to = 512,
     });
+    stage1_bin.step.dependOn(&stage1_elf.step);
 
     // Stage2
     const stage2_mod = b.createModule(.{
@@ -46,13 +47,15 @@ pub fn buildBiosBootloader(b: *std.Build, arch: arch_util.Architecture) *std.Bui
         .name = "stage2.elf",
         .root_module = stage2_mod,
     });
+    stage2_elf.setLinkerScript(bios_dir.path(b, "stage2/link_stage2.ld"));
 
-    const stage2_bin = b.addObjCopy(stage2_elf.getEmittedAsm(), .{
+    const stage2_bin = b.addObjCopy(stage2_elf.getEmittedBin(), .{
         .basename = "stage2.bin",
         .format = .bin,
-        .pad_to = 4096,
     });
+    stage2_bin.step.dependOn(&stage2_elf.step);
 
+    // Bios Bootloader Image
     const boot_files = b.addWriteFiles();
     const boot_img = boot_files.add("boot.img", "");
 
@@ -69,6 +72,7 @@ pub fn buildBiosBootloader(b: *std.Build, arch: arch_util.Architecture) *std.Bui
         .count = 1,
         .conv = &.{ "notrunc", "sync" },
     });
+    first_dd.step.dependOn(&stage1_bin.step);
 
     const second_dd = dd_util.ddCmd(b, .{
         .of_lp = boot_img,
@@ -77,6 +81,7 @@ pub fn buildBiosBootloader(b: *std.Build, arch: arch_util.Architecture) *std.Bui
         .count = 2047,
         .conv = &.{ "notrunc", "sync" },
     });
+    second_dd.step.dependOn(&stage2_bin.step);
 
     const bootloader = b.addInstallBinFile(boot_img, b.fmt("maize-bios-{s}.img", .{@tagName(arch)}));
     bootloader.step.dependOn(&init_dd.step);
