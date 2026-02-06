@@ -1,7 +1,6 @@
 const std = @import("std");
 const dap = @import("dap.zig");
-const utils = @import("utils");
-const teletype = utils.teletype;
+const teletype = @import("teletype.zig");
 
 const STAGE_TWO_DEST = 0x8000;
 const DAP_ENTRY: dap.DiskAddressPacket = .{
@@ -15,7 +14,6 @@ export var drive: u8 = 0;
 
 export fn first_stage() noreturn {
     if (!dap.check_ext13(drive)) @panic("!E");
-    // dap_entry.read(drive) catch @panic("!R");
     if (DAP_ENTRY.read(drive)) |err_code| {
         teletype.put(err_code);
         @panic("!R");
