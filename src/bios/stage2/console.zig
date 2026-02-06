@@ -41,7 +41,7 @@ const Color = packed struct(u8) {
     }
 };
 
-pub fn setColor(fg: Color, bg: Color) void {
+pub fn setColor(fg: ColorType, bg: ColorType) void {
     g_color = Color.init(fg, bg);
 }
 
