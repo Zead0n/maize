@@ -20,7 +20,7 @@ pub fn enable() error{FailedA20}!void {
         if (!kbcWait(2, 0)) break :kbc_enable;
         cpu.out(u8, 0x64, 0xd0);
         if (!kbcWait(1, 1)) break :kbc_enable;
-        const kbc_byte = cpu.inb(0x60);
+        const kbc_byte = cpu.in(u8, 0x60);
         if (!kbcWait(2, 0)) break :kbc_enable;
         cpu.out(u8, 0x64, 0xd1);
         if (!kbcWait(2, 0)) break :kbc_enable;
@@ -61,7 +61,7 @@ fn check() bool {
 fn kbcWait(mask: u8, expected: u8) bool {
     const timeout = 50000;
     for (0..timeout) |_| {
-        if ((cpu.inb(0x64) & mask) == expected)
+        if ((cpu.in(u8, 0x64) & mask) == expected)
             return true;
     }
 
