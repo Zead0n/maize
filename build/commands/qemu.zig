@@ -7,8 +7,8 @@ pub fn createQemuCommand(b: *std.Build, lp: std.Build.LazyPath, arch: std.Target
     };
 
     const cmd = b.addSystemCommand(&.{qemu_cmd});
-    cmd.addArg("-hda");
-    cmd.addFileArg(lp);
+    cmd.addArg("-drive");
+    cmd.addPrefixedFileArg("format=raw,file=", lp);
 
     return cmd;
 }
