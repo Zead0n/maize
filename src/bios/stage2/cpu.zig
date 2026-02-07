@@ -10,10 +10,10 @@ pub fn in(comptime T: type, port: u16) T {
     const instruction = comptime switch (T) {
         u8 => "inb %[port], %[ret]",
         u16 => "inw %[port], %[ret]",
-        else => unreachable,
+        else => @compileError("Unsupported type"),
     };
 
-    return asm volatile (instruction
+    return asm (instruction
         : [ret] "={ax}" (-> T),
         : [port] "i" (port),
     );
@@ -23,7 +23,7 @@ pub fn out(comptime T: type, port: u16, value: T) void {
     const instruction = comptime switch (T) {
         u8 => "outb %%al, %[port]",
         u16 => "outw %%ax, %[port]",
-        else => unreachable,
+        else => @compileError("Unsupported type"),
     };
 
     asm volatile (instruction
@@ -43,10 +43,10 @@ pub fn memIn(comptime T: type, segment: u16, offset: u16) T {
         \\movw %[segment], %%fs
         \\movw %%fs:(%[offset:c]), %[ret]
         ,
-        else => unreachable,
+        else => @compileError("Unsupported type"),
     };
 
-    return asm volatile (instruction
+    return asm (instruction
         : [ret] "=r" (-> T),
         : [segment] "{ax}" (segment),
           [offset] "i" (offset),
@@ -63,7 +63,7 @@ pub fn memOut(comptime T: type, segment: u16, offset: u16, value: T) void {
         \\movw %[segment], %%fs
         \\movw %[value], %%fs:(%[offset:c])
         ,
-        else => unreachable,
+        else => @compileError("Unsupported type"),
     };
 
     asm volatile (instruction
