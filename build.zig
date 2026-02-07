@@ -4,7 +4,7 @@ const bootloader_util = @import("build/bootloader.zig");
 const qemu_util = @import("build/commands/qemu.zig");
 
 pub fn build(b: *std.Build) void {
-    const arch = b.option(arch_util.Architecture, "arch", "Cpu architecture (defaults to x86)") orelse arch_util.Architecture.x86;
+    const arch = b.option(arch_util.Architecture, "arch", "Cpu architecture (defaults to x86)") orelse .x86;
 
     const bios_bootloader = bootloader_util.buildBiosBootloader(b, arch);
 
