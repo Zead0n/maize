@@ -20,9 +20,9 @@ export fn _start() callconv(.naked) noreturn {
 }
 
 fn stageTwoEntry() callconv(.c) noreturn {
+    a20.enable() catch @panic("Could not enable A20 line");
     mode.enableUnreal(@constCast(&GDT));
     vga.clear();
-    a20.enable() catch @panic("Could not enable A20 line");
 
     const fpu_feature = (1 << 0);
     const pae_feature = (1 << 6);
@@ -35,7 +35,7 @@ fn stageTwoEntry() callconv(.c) noreturn {
     const memory_map = memmap.detectMemory() catch |err| switch (err) {
         error.Unsupported => @panic("E820 unsupported"),
         error.FailedMemoryMap => @panic("Failed to map memory"),
-        error.TooManyEntries => @panic("Too many memory maps"),
+        error.TooManyEntries => @panic("Too many memory entries"),
     };
 
     for (memory_map) |mem_entry| {
