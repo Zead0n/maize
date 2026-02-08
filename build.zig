@@ -16,8 +16,8 @@ pub fn build(b: *std.Build) void {
     const bios_step = b.step("bios", "Build bios");
     bios_step.dependOn(&bios_bootloader.step);
 
-    const qemu_bios_step = b.step("qemu-bios", "Build bios and run qemu");
-    const qemu_bios_cmd = qemu_util.createQemuCommand(b, bios_bootloader.source, arch.toStdArch());
-    qemu_bios_cmd.step.dependOn(&bios_bootloader.step);
-    qemu_bios_step.dependOn(&qemu_bios_cmd.step);
+    const bios_qemu_step = b.step("bios-qemu", "Build bios and run qemu");
+    const bios_qemu_cmd = qemu_util.createQemuCommand(b, bios_bootloader.source, arch.toStdArch());
+    bios_qemu_cmd.step.dependOn(&bios_bootloader.step);
+    bios_qemu_step.dependOn(&bios_qemu_cmd.step);
 }
