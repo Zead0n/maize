@@ -3,7 +3,12 @@ const arch_util = @import("arch.zig");
 const dd_util = @import("commands/dd.zig");
 const gzip_util = @import("commands/gzip.zig");
 
-pub fn buildBiosBootloader(b: *std.Build, arch: arch_util.Architecture) *std.Build.Step.InstallFile {
+pub const BiosStages = struct {
+    stage_one: *std.Build.Step.Compile,
+    stage_two: *std.Build.Step.Compile,
+};
+
+pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
     const bios_dir = b.path("src/bios");
 
     // Stage1
@@ -20,12 +25,6 @@ pub fn buildBiosBootloader(b: *std.Build, arch: arch_util.Architecture) *std.Bui
     });
     stage1_elf.setLinkerScript(bios_dir.path(b, "stage1/link_stage1.ld"));
 
-    const stage1_bin = b.addObjCopy(stage1_elf.getEmittedBin(), .{
-        .basename = "stage1.bin",
-        .format = .bin,
-    });
-    stage1_bin.step.dependOn(&stage1_elf.step);
-
     // Stage2
     const stage2_mod = b.createModule(.{
         .target = b.resolveTargetQuery(arch.getTargetQuery(.code16)),
@@ -39,11 +38,24 @@ pub fn buildBiosBootloader(b: *std.Build, arch: arch_util.Architecture) *std.Bui
     });
     stage2_elf.setLinkerScript(bios_dir.path(b, "stage2/link_stage2.ld"));
 
-    const stage2_bin = b.addObjCopy(stage2_elf.getEmittedBin(), .{
+    return .{
+        .stage_one = stage1_elf,
+        .stage_two = stage2_elf,
+    };
+}
+
+pub fn buildBiosBootloader(b: *std.Build, name: []const u8, stages: BiosStages) *std.Build.Step.InstallFile {
+    const stage1_bin = b.addObjCopy(stages.stage_one.getEmittedBin(), .{
+        .basename = "stage1.bin",
+        .format = .bin,
+    });
+    stage1_bin.step.dependOn(&stages.stage_one.step);
+
+    const stage2_bin = b.addObjCopy(stages.stage_two.getEmittedBin(), .{
         .basename = "stage2.bin",
         .format = .bin,
     });
-    stage2_bin.step.dependOn(&stage2_elf.step);
+    stage2_bin.step.dependOn(&stages.stage_two.step);
 
     // Bios Bootloader Image
     const boot_files = b.addWriteFiles();
@@ -73,7 +85,7 @@ pub fn buildBiosBootloader(b: *std.Build, arch: arch_util.Architecture) *std.Bui
     });
     second_dd.step.dependOn(&stage2_bin.step);
 
-    const bootloader = b.addInstallBinFile(boot_img, b.fmt("maize-bios-{s}.img", .{@tagName(arch)}));
+    const bootloader = b.addInstallBinFile(boot_img, name);
     bootloader.step.dependOn(&init_dd.step);
     bootloader.step.dependOn(&first_dd.step);
     bootloader.step.dependOn(&second_dd.step);

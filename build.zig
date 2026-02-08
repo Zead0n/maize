@@ -6,7 +6,12 @@ const qemu_util = @import("build/commands/qemu.zig");
 pub fn build(b: *std.Build) void {
     const arch = b.option(arch_util.Architecture, "arch", "Cpu architecture (defaults to x86)") orelse .x86;
 
-    const bios_bootloader = bootloader_util.buildBiosBootloader(b, arch);
+    const bios_stages = bootloader_util.buildBiosStages(b, arch);
+    const bios_bootloader = bootloader_util.buildBiosBootloader(
+        b,
+        b.fmt("maize-bios-{s}.img", .{@tagName(arch)}),
+        bios_stages,
+    );
 
     const bios_step = b.step("bios", "Build bios");
     bios_step.dependOn(&bios_bootloader.step);
