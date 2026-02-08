@@ -2,7 +2,7 @@ const std = @import("std");
 const cpu = @import("cpu.zig");
 const gdt = @import("gdt.zig");
 const a20 = @import("a20.zig");
-const console = @import("console.zig");
+const vga = @import("vga.zig");
 const memmap = @import("memmap.zig");
 const mode = @import("mode.zig");
 
@@ -21,7 +21,7 @@ export fn _start() callconv(.naked) noreturn {
 
 fn stageTwoEntry() callconv(.c) noreturn {
     mode.enableUnreal(@constCast(&GDT));
-    console.clear();
+    vga.clear();
     a20.enable() catch @panic("Could not enable A20 line");
 
     const fpu_feature = (1 << 0);
@@ -39,7 +39,7 @@ fn stageTwoEntry() callconv(.c) noreturn {
     };
 
     for (memory_map) |mem_entry| {
-        console.print("Base: 0x{x: <8} | Length: 0x{x: <8} | Type: {s}\n", .{ mem_entry.base, mem_entry.length, @tagName(mem_entry.type) });
+        vga.print("Base: 0x{x: <8} | Length: 0x{x: <8} | Type: {s}\n", .{ mem_entry.base, mem_entry.length, @tagName(mem_entry.type) });
     }
 
     @panic("Entry 2");
@@ -47,12 +47,12 @@ fn stageTwoEntry() callconv(.c) noreturn {
 
 pub const panic = std.debug.FullPanic(fail);
 fn fail(msg: []const u8, _: ?usize) noreturn {
-    console.printString("Maize [ ");
-    console.setColor(.light_red, .black);
-    console.printString("PANIC");
-    console.setColor(.light_gray, .black);
-    console.printString(" ]: ");
-    console.printString(msg);
+    vga.printString("Maize [ ");
+    vga.setColor(.light_red, .black);
+    vga.printString("PANIC");
+    vga.setColor(.light_gray, .black);
+    vga.printString(" ]: ");
+    vga.printString(msg);
 
     while (true)
         asm volatile ("hlt");
