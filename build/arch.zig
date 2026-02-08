@@ -1,11 +1,6 @@
 const std = @import("std");
 const Arch = std.Target.Cpu.Arch;
 
-pub const Stage = enum {
-    First,
-    Second,
-};
-
 pub const Architecture = enum {
     x86,
 
