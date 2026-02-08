@@ -1,4 +1,5 @@
 const std = @import("std");
+const cpu = @import("cpu.zig");
 const gdt = @import("gdt.zig");
 const a20 = @import("a20.zig");
 const console = @import("console.zig");
@@ -22,6 +23,14 @@ fn stageTwoEntry() callconv(.c) noreturn {
     mode.enableUnreal(@constCast(&GDT));
     console.clear();
     a20.enable() catch @panic("Could not enable A20 line");
+
+    const fpu_feature = (1 << 0);
+    const pae_feature = (1 << 6);
+    const pge_feature = (1 << 13);
+    const fxsr_feature = (1 << 24);
+    const required_cpu_features = fpu_feature | pae_feature | pge_feature | fxsr_feature;
+    if (cpu.cpuidFeatures() & required_cpu_features != required_cpu_features)
+        @panic("CPU missing required features");
 
     const memory_map = memmap.detectMemory() catch |err| switch (err) {
         error.Unsupported => @panic("E820 unsupported"),

@@ -6,6 +6,13 @@ pub fn disable_int() void {
     asm volatile ("cli");
 }
 
+pub fn cpuidFeatures() u32 {
+    return asm ("cpuid"
+        : [ret] "={edx}" (-> u32),
+        : [a] "{eax}" (1),
+    );
+}
+
 pub fn in(comptime T: type, port: u16) T {
     const instruction = comptime switch (T) {
         u8 => "inb %[port], %[ret]",
