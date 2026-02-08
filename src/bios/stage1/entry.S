@@ -8,8 +8,8 @@ _start:
 
 .org 0x03, 0x00
 bpb_start:
-    
 bpb_end:
+.org 0x25, 0x90
 
 after_bpb:
     /* Initialize stack */
