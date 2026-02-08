@@ -1,5 +1,4 @@
 const cpu = @import("cpu.zig");
-const console = @import("console.zig");
 
 pub fn enable() error{FailedA20}!void {
     if (check()) return;
