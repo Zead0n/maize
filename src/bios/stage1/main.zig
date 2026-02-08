@@ -14,17 +14,12 @@ export var drive: u8 = 0;
 
 export fn first_stage() noreturn {
     if (!dap.check_ext13(drive)) @panic("!E");
-    if (DAP_ENTRY.read(drive)) |err_code| {
-        teletype.put(err_code);
-        @panic("!R");
-    }
+    DAP_ENTRY.read(drive) catch @panic("!R");
 
     asm volatile ("jmp %[stage2_addr:a]"
         :
         : [stage2_addr] "i" (STAGE_TWO_DEST),
     );
-
-    asm volatile ("hlt");
 
     @panic("!1");
 }

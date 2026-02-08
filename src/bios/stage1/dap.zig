@@ -8,19 +8,17 @@ pub const DiskAddressPacket = packed struct {
     segment: u16,
     lba: u64,
 
-    pub fn read(self: @This(), disk: u16) ?u8 {
-        var out: u16 = undefined;
-        asm volatile (
-            \\mov %[dap_addr], %%esi
+    pub fn read(self: @This(), disk: u16) error{ReadFailed}!void {
+        const result: u16 = asm volatile (
             \\int $0x13
-            : [ret] "={ax}" (out),
+            : [ret] "={ax}" (-> u16),
             : [ax] "{ax}" (0x4200),
               [disk_num] "{dx}" (disk),
-              [dap_addr] "X" (@intFromPtr(&self)),
+              [dap_addr] "{si}" (&self),
         );
 
-        const result: u8 = @as(u8, @truncate(out >> 8));
-        return if (result != 0) result else null;
+        if (@as(u8, @truncate(result)) != 0)
+            return error.ReadFailed;
     }
 };
 
