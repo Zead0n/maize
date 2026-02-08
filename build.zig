@@ -16,6 +16,13 @@ pub fn build(b: *std.Build) void {
     const bios_step = b.step("bios", "Build bios");
     bios_step.dependOn(&bios_bootloader.step);
 
+    const bios_disect_step = b.step("bios-disect", "Disect bios stages");
+    const bios_install_dir = std.Build.InstallDir{ .custom = "bios" };
+    const stage1_install = b.addInstallFileWithDir(bios_stages.stage_one.getEmittedBin(), bios_install_dir, "stage1.elf");
+    const stage2_install = b.addInstallFileWithDir(bios_stages.stage_two.getEmittedBin(), bios_install_dir, "stage2.elf");
+    bios_disect_step.dependOn(&stage1_install.step);
+    bios_disect_step.dependOn(&stage2_install.step);
+
     const bios_qemu_step = b.step("bios-qemu", "Build bios and run qemu");
     const bios_qemu_cmd = qemu_util.createQemuCommand(b, bios_bootloader.source, arch.toStdArch());
     bios_qemu_cmd.step.dependOn(&bios_bootloader.step);
