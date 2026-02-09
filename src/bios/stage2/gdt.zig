@@ -34,13 +34,13 @@ pub const KERNEL_DATA_SEGMENT_32 = GlobalDescriptorEntry{
 
 const Gdtr = packed struct {
     size: u16,
-    ptr: *anyopaque,
+    ptr: u32,
 };
 
 pub fn load_gdt(descriptors: []GlobalDescriptorEntry) void {
     const gdtr = Gdtr{
         .size = @truncate((@sizeOf(u64) * descriptors.len) - 1),
-        .ptr = descriptors.ptr,
+        .ptr = @intFromPtr(descriptors.ptr),
     };
 
     asm volatile (

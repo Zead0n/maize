@@ -1,11 +1,12 @@
 const std = @import("std");
+const a20 = @import("a20.zig");
 const cpu = @import("cpu.zig");
 const gdt = @import("gdt.zig");
-const a20 = @import("a20.zig");
-const vga = @import("vga.zig");
 const memmap = @import("memmap.zig");
 const mode = @import("mode.zig");
+const vga = @import("vga.zig");
 
+const STAGE3_DEST = 0x2000;
 const GDT = [_]gdt.GlobalDescriptorEntry{
     gdt.NULL_DESCRIPTOR,
     gdt.KERNEL_CODE_SEGMENT_32,
@@ -21,7 +22,8 @@ export fn _start() callconv(.naked) noreturn {
 
 fn stageTwoEntry() callconv(.c) noreturn {
     a20.enable() catch @panic("Could not enable A20 line");
-    mode.enableUnreal(@constCast(&GDT));
+    gdt.load_gdt(@constCast(&GDT));
+    mode.enableUnreal();
     vga.clear();
 
     const fpu_feature = (1 << 0);
@@ -32,17 +34,39 @@ fn stageTwoEntry() callconv(.c) noreturn {
     if (cpu.cpuidFeatures() & required_cpu_features != required_cpu_features)
         @panic("CPU missing required features");
 
-    const memory_map = memmap.detectMemory() catch |err| switch (err) {
-        error.Unsupported => @panic("E820 unsupported"),
-        error.FailedMemoryMap => @panic("Failed to map memory"),
-        error.TooManyEntries => @panic("Too many memory entries"),
-    };
-
-    for (memory_map) |mem_entry| {
-        vga.print("Base: 0x{x: <8} | Length: 0x{x: <8} | Type: {s}\n", .{ mem_entry.base, mem_entry.length, @tagName(mem_entry.type) });
-    }
+    loadStage3();
+    mode.enablePmode();
+    asm volatile (
+        \\ljmp $0x8, $1f
+        \\.code32
+        \\1:
+        \\  mov $0x10, %%eax
+        \\  mov %%eax, %%ds
+        \\  mov %%eax, %%es
+        \\  mov %%eax, %%ss
+        \\  call %[stage3_addr:c]
+        \\  hlt
+        \\.code16
+        :
+        : [stage3_addr] "i" (STAGE3_DEST),
+    );
 
     @panic("Entry 2");
+}
+
+fn loadStage3() void {
+    const stage3_data = @embedFile("stage3");
+
+    var reader = std.Io.Reader.fixed(stage3_data);
+    var dest: [*]u8 = @ptrFromInt(STAGE3_DEST);
+
+    var i: usize = 0;
+    while (reader.takeByte()) |byte| : (i += 1) {
+        dest[i] = byte;
+    } else |err| switch (err) {
+        error.EndOfStream => {},
+        else => {}, // TODO: Implement panic when error other than 'EndOfStream' occurs
+    }
 }
 
 pub const panic = std.debug.FullPanic(fail);

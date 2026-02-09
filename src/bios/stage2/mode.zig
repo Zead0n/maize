@@ -1,7 +1,7 @@
 const gdt = @import("gdt.zig");
 const cpu = @import("cpu.zig");
 
-pub fn enableUnreal(descriptors: []gdt.GlobalDescriptorEntry) void {
+pub fn enableUnreal() void {
     var ds: u32 = 0;
     var ss: u32 = 0;
     asm volatile (
@@ -18,9 +18,7 @@ pub fn enableUnreal(descriptors: []gdt.GlobalDescriptorEntry) void {
           [ss] "r" (ss),
     );
 
-    cpu.disable_int();
-    gdt.load_gdt(descriptors);
-    writeCR0(readCR0() | 1);
+    enablePmode();
 
     asm volatile (
         \\mov %[seg], %%ds
@@ -34,15 +32,20 @@ pub fn enableUnreal(descriptors: []gdt.GlobalDescriptorEntry) void {
     cpu.enable_int();
 }
 
+pub fn enablePmode() void {
+    cpu.disable_int();
+    writeCR0(readCR0() | 1);
+}
+
 fn readCR0() u32 {
     return asm volatile ("mov %%cr0, %[ret]"
-        : [ret] "=r" (-> u32),
+        : [ret] "={eax}" (-> u32),
     );
 }
 
 fn writeCR0(value: u32) void {
     return asm volatile ("mov %[val], %%cr0"
         :
-        : [val] "r" (value),
+        : [val] "{eax}" (value),
     );
 }
