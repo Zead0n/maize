@@ -30,9 +30,27 @@ fn buildBios(b: *std.Build, arch: arch_util.Architecture) void {
     const stage1_bin = b.addObjCopy(stage1_elf.getEmittedBin(), .{
         .basename = "stage1.bin",
         .format = .bin,
-        .pad_to = 512,
     });
     stage1_bin.step.dependOn(&stage1_elf.step);
+
+    // Stage3 (Built before Stage2 to embed)
+    const stage3_mod = b.createModule(.{
+        .target = b.resolveTargetQuery(arch.getTargetQuery(.none)),
+        .optimize = .ReleaseSmall,
+        .root_source_file = bios_dir.path(b, "stage3/main.zig"),
+    });
+
+    const stage3_elf = b.addExecutable(.{
+        .name = "stage3.elf",
+        .root_module = stage3_mod,
+    });
+    stage3_elf.setLinkerScript(bios_dir.path(b, "stage3/link_stage3.ld"));
+
+    const stage3_bin = b.addObjCopy(stage3_elf.getEmittedBin(), .{
+        .basename = "stage3.bin",
+        .format = .bin,
+    });
+    stage3_bin.step.dependOn(&stage3_elf.step);
 
     // Stage2
     const stage2_mod = b.createModule(.{
@@ -40,6 +58,7 @@ fn buildBios(b: *std.Build, arch: arch_util.Architecture) void {
         .optimize = .ReleaseSmall,
         .root_source_file = bios_dir.path(b, "stage2/main.zig"),
     });
+    stage2_mod.addAnonymousImport("stage3", .{ .root_source_file = stage3_bin.getOutput() });
 
     const stage2_elf = b.addExecutable(.{
         .name = "stage2.elf",
@@ -50,7 +69,6 @@ fn buildBios(b: *std.Build, arch: arch_util.Architecture) void {
     const stage2_bin = b.addObjCopy(stage2_elf.getEmittedBin(), .{
         .basename = "stage2.bin",
         .format = .bin,
-        .pad_to = 2048,
     });
     stage2_bin.step.dependOn(&stage2_elf.step);
 
@@ -99,12 +117,22 @@ fn buildBios(b: *std.Build, arch: arch_util.Architecture) void {
     const bios_install_dir = std.Build.InstallDir{ .custom = "bios" };
     const stage1_elf_install = b.addInstallFileWithDir(stage1_elf.getEmittedBin(), bios_install_dir, "stage1.elf");
     const stage2_elf_install = b.addInstallFileWithDir(stage2_elf.getEmittedBin(), bios_install_dir, "stage2.elf");
+    const stage3_elf_install = b.addInstallFileWithDir(stage3_elf.getEmittedBin(), bios_install_dir, "stage3.elf");
+    const stage1_asm_install = b.addInstallFileWithDir(stage1_elf.getEmittedAsm(), bios_install_dir, "stage1.asm");
+    const stage2_asm_install = b.addInstallFileWithDir(stage2_elf.getEmittedAsm(), bios_install_dir, "stage2.asm");
+    const stage3_asm_install = b.addInstallFileWithDir(stage3_elf.getEmittedAsm(), bios_install_dir, "stage3.asm");
     const stage1_bin_install = b.addInstallFileWithDir(stage1_bin.getOutput(), bios_install_dir, "stage1.bin");
     const stage2_bin_install = b.addInstallFileWithDir(stage2_bin.getOutput(), bios_install_dir, "stage2.bin");
+    const stage3_bin_install = b.addInstallFileWithDir(stage3_bin.getOutput(), bios_install_dir, "stage3.bin");
     bios_disect_step.dependOn(&stage1_elf_install.step);
     bios_disect_step.dependOn(&stage2_elf_install.step);
+    bios_disect_step.dependOn(&stage3_elf_install.step);
+    bios_disect_step.dependOn(&stage1_asm_install.step);
+    bios_disect_step.dependOn(&stage2_asm_install.step);
+    bios_disect_step.dependOn(&stage3_asm_install.step);
     bios_disect_step.dependOn(&stage1_bin_install.step);
     bios_disect_step.dependOn(&stage2_bin_install.step);
+    bios_disect_step.dependOn(&stage3_bin_install.step);
 
     // Bios qemu step
     const bios_qemu_step = b.step("bios-qemu", "Build bios and run qemu");
