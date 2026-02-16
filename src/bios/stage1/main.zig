@@ -2,7 +2,7 @@ const std = @import("std");
 const dap = @import("dap.zig");
 const teletype = @import("teletype.zig");
 
-const STAGE_TWO_DEST = 0x8000;
+const STAGE_TWO_DEST = 0xf000;
 const DAP_ENTRY: dap.DiskAddressPacket = .{
     .lba = 1,
     .blocks = 8,
@@ -18,7 +18,7 @@ export fn first_stage() noreturn {
 
     asm volatile (
         \\push %%dx
-        \\call %[stage2_addr:c]
+        \\calll %[stage2_addr:c]
         :
         : [drive] "{dx}" (drive),
           [stage2_addr] "i" (STAGE_TWO_DEST),
