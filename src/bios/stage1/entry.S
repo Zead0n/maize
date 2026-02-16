@@ -11,6 +11,10 @@ bpb_start:
 bpb_end:
 .org 0x25, 0x90
 
+.extern drive
+
+.extern first_stage
+.type first_stage, @function
 after_bpb:
     /* Initialize stack */
     xor %ax, %ax
@@ -24,4 +28,4 @@ after_bpb:
     mov %dl, drive
 
     push %dx
-    jmp first_stage
+    call first_stage
