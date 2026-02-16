@@ -54,17 +54,18 @@ fn buildBios(b: *std.Build, arch: arch_util.Architecture) void {
 
     // Stage2
     const stage2_mod = b.createModule(.{
-        .target = b.resolveTargetQuery(arch.getTargetQuery(.code16)),
+        .target = b.resolveTargetQuery(arch.getTargetQuery(.none)),
         .optimize = .ReleaseSmall,
-        .root_source_file = bios_dir.path(b, "stage2/main.zig"),
+        .root_source_file = bios_dir.path(b, "test_stage2/main.zig"),
     });
-    stage2_mod.addAnonymousImport("stage3", .{ .root_source_file = stage3_bin.getOutput() });
+    stage2_mod.addAssemblyFile(bios_dir.path(b, "test_stage2/real.S"));
+    // stage2_mod.addAnonymousImport("stage3", .{ .root_source_file = stage3_bin.getOutput() });
 
     const stage2_elf = b.addExecutable(.{
         .name = "stage2.elf",
         .root_module = stage2_mod,
     });
-    stage2_elf.setLinkerScript(bios_dir.path(b, "stage2/link_stage2.ld"));
+    stage2_elf.setLinkerScript(bios_dir.path(b, "test_stage2/link_stage2.ld"));
 
     const stage2_bin = b.addObjCopy(stage2_elf.getEmittedBin(), .{
         .basename = "stage2.bin",
