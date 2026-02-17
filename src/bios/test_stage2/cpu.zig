@@ -1,3 +1,13 @@
+pub fn memSegment(ptr: *anyopaque) u16 {
+    const addr = @intFromPtr(ptr);
+    return @as(u16, @truncate((0xfff0 & addr) >> 4));
+}
+
+pub fn memOffset(ptr: *anyopaque) u16 {
+    const addr = @intFromPtr(ptr);
+    return @as(u16, @truncate(0x000f & addr));
+}
+
 pub fn cpuidFeatures() u32 {
     return asm ("cpuid"
         : [ret] "={edx}" (-> u32),
