@@ -35,12 +35,6 @@ fn stageTwoEntry() callconv(.c) noreturn {
 
     a20.enable() catch @panic("Failed to enable A20");
 
-    // thunk.eax = 0x0e43;
-    // thunk.int(0x10);
-    //
-    // vga.print("{*}\n", .{thunk});
-    // vga.print("0x{x}\n", .{thunk.eax});
-
     @panic("Entry 2");
 }
 
