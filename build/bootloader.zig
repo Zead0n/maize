@@ -11,7 +11,6 @@ pub const BiosStages = struct {
 pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
     const bios_dir = b.path("boot/bios");
 
-    // Stage1
     const stage1_mod = b.createModule(.{
         .target = b.resolveTargetQuery(arch.getTargetQuery(.code16)),
         .optimize = .ReleaseSmall,
@@ -25,7 +24,6 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
     });
     stage1_elf.setLinkerScript(bios_dir.path(b, "stage1/link_stage1.ld"));
 
-    // Stage2
     const stage2_mod = b.createModule(.{
         .target = b.resolveTargetQuery(arch.getTargetQuery(.none)),
         .optimize = .ReleaseSmall,
@@ -58,7 +56,6 @@ pub fn buildBiosBootloader(b: *std.Build, name: []const u8, stages: BiosStages) 
     });
     stage2_bin.step.dependOn(&stages.stage2.step);
 
-    // Bios Bootloader Image
     const boot_files = b.addWriteFiles();
     const boot_img = boot_files.add("boot.img", "");
 
