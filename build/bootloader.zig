@@ -62,7 +62,7 @@ pub fn buildBiosBootloader(b: *std.Build, name: []const u8, stages: BiosStages) 
     const init_dd = dd_util.ddCmd(b, .{
         .of_lp = boot_img,
         .if_lp = std.Build.LazyPath{ .cwd_relative = "/dev/zero" },
-        .count = 2048,
+        .count = 64,
         .conv = &.{ "notrunc", "sync" },
     });
 
@@ -78,7 +78,7 @@ pub fn buildBiosBootloader(b: *std.Build, name: []const u8, stages: BiosStages) 
         .of_lp = boot_img,
         .if_lp = stage2_bin.getOutput(),
         .seek = 1,
-        .count = 2047,
+        .count = 63,
         .conv = &.{ "notrunc", "sync" },
     });
     second_dd.step.dependOn(&stage2_bin.step);
