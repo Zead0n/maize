@@ -29,15 +29,15 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
     const stage2_mod = b.createModule(.{
         .target = b.resolveTargetQuery(arch.getTargetQuery(.none)),
         .optimize = .ReleaseSmall,
-        .root_source_file = bios_dir.path(b, "test_stage2/main.zig"),
+        .root_source_file = bios_dir.path(b, "stage2/main.zig"),
     });
-    stage2_mod.addAssemblyFile(bios_dir.path(b, "test_stage2/real.S"));
+    stage2_mod.addAssemblyFile(bios_dir.path(b, "stage2/real.S"));
 
     const stage2_elf = b.addExecutable(.{
         .name = "stage2.elf",
         .root_module = stage2_mod,
     });
-    stage2_elf.setLinkerScript(bios_dir.path(b, "test_stage2/link_stage2.ld"));
+    stage2_elf.setLinkerScript(bios_dir.path(b, "stage2/link_stage2.ld"));
 
     return .{
         .stage1 = stage1_elf,
