@@ -9,7 +9,7 @@ pub const BiosStages = struct {
 };
 
 pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
-    const bios_dir = b.path("src/bios");
+    const bios_dir = b.path("boot/bios");
 
     // Stage1
     const stage1_mod = b.createModule(.{
@@ -27,16 +27,17 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
 
     // Stage2
     const stage2_mod = b.createModule(.{
-        .target = b.resolveTargetQuery(arch.getTargetQuery(.code16)),
+        .target = b.resolveTargetQuery(arch.getTargetQuery(.none)),
         .optimize = .ReleaseSmall,
-        .root_source_file = bios_dir.path(b, "stage2/main.zig"),
+        .root_source_file = bios_dir.path(b, "test_stage2/main.zig"),
     });
+    stage2_mod.addAssemblyFile(bios_dir.path(b, "test_stage2/real.S"));
 
     const stage2_elf = b.addExecutable(.{
         .name = "stage2.elf",
         .root_module = stage2_mod,
     });
-    stage2_elf.setLinkerScript(bios_dir.path(b, "stage2/link_stage2.ld"));
+    stage2_elf.setLinkerScript(bios_dir.path(b, "test_stage2/link_stage2.ld"));
 
     return .{
         .stage1 = stage1_elf,
