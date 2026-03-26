@@ -14,28 +14,27 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
     const stage1_mod = b.createModule(.{
         .target = b.resolveTargetQuery(arch.getTargetQuery(.code16)),
         .optimize = .ReleaseSmall,
-        .root_source_file = bios_dir.path(b, "stage1/main.zig"),
+        .root_source_file = bios_dir.path(b, "stage1.zig"),
     });
-    stage1_mod.addAssemblyFile(bios_dir.path(b, "stage1/entry.S"));
+    stage1_mod.addAssemblyFile(bios_dir.path(b, "stage1_entry.S"));
 
     const stage1_elf = b.addExecutable(.{
         .name = "stage1.elf",
         .root_module = stage1_mod,
     });
-    stage1_elf.setLinkerScript(bios_dir.path(b, "stage1/link_stage1.ld"));
+    stage1_elf.setLinkerScript(bios_dir.path(b, "stage1_link.ld"));
 
     const stage2_mod = b.createModule(.{
         .target = b.resolveTargetQuery(arch.getTargetQuery(.none)),
         .optimize = .ReleaseSmall,
-        .root_source_file = bios_dir.path(b, "stage2/main.zig"),
+        .root_source_file = bios_dir.path(b, "stage2.zig"),
     });
-    stage2_mod.addAssemblyFile(bios_dir.path(b, "stage2/real.S"));
 
     const stage2_elf = b.addExecutable(.{
         .name = "stage2.elf",
         .root_module = stage2_mod,
     });
-    stage2_elf.setLinkerScript(bios_dir.path(b, "stage2/link_stage2.ld"));
+    stage2_elf.setLinkerScript(bios_dir.path(b, "stage2_link.ld"));
 
     return .{
         .stage1 = stage1_elf,

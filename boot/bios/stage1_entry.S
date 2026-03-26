@@ -13,9 +13,11 @@ bpb_end:
 
 .extern drive
 
-.extern first_stage
-.type first_stage, @function
+.extern firstStage
+.type firstStage, @function
 after_bpb:
+    cli
+
     /* Initialize stack */
     xor %ax, %ax
     mov %ax, %ds
@@ -23,9 +25,9 @@ after_bpb:
     mov %ax, %ss
     movw $0x7c00, %sp
 
+    sti
+
     cld
 
     mov %dl, drive
-
-    push %dx
-    call first_stage
+    call firstStage
