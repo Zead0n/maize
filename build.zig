@@ -1,15 +1,15 @@
 const std = @import("std");
-const arch_util = @import("build/arch.zig");
-const bootloader_util = @import("build/bootloader.zig");
-const qemu_util = @import("build/commands/qemu.zig");
+const arch = @import("build/arch.zig");
+const boot = @import("build/boot.zig");
+const qemu = @import("build/commands/qemu.zig");
 
 pub fn build(b: *std.Build) void {
-    const arch = b.option(arch_util.Architecture, "arch", "Cpu architecture (defaults to x86)") orelse .x86;
+    const arch_opt = b.option(arch.Architecture, "arch", "Cpu architecture (defaults to x86)") orelse .x86;
 
-    const stages = bootloader_util.buildBiosStages(b, arch);
-    const bios_bootloader = bootloader_util.buildBiosBootloader(
+    const stages = boot.buildBiosStages(b, arch_opt);
+    const bios_bootloader = boot.buildBiosBootloader(
         b,
-        b.fmt("maize-bios-{s}.img", .{@tagName(arch)}),
+        b.fmt("maize-bios-{s}.img", .{@tagName(arch_opt)}),
         stages,
     );
 
@@ -28,7 +28,7 @@ pub fn build(b: *std.Build) void {
     bios_disect_step.dependOn(&stage2_asm_install.step);
 
     const bios_qemu_step = b.step("bios-qemu", "Build bios and run qemu");
-    const bios_qemu_cmd = qemu_util.createQemuCommand(b, bios_bootloader.source, arch.toStdArch());
+    const bios_qemu_cmd = qemu.createQemuCommand(b, bios_bootloader.source, arch_opt.toStdArch());
     bios_qemu_cmd.step.dependOn(&bios_bootloader.step);
     bios_qemu_step.dependOn(&bios_qemu_cmd.step);
 }
