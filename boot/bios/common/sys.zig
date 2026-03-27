@@ -8,13 +8,6 @@ pub fn memOffset(ptr: *anyopaque) u16 {
     return @as(u16, @truncate(0x000f & addr));
 }
 
-pub fn cpuidFeatures() u32 {
-    return asm ("cpuid"
-        : [ret] "={edx}" (-> u32),
-        : [a] "{eax}" (1),
-    );
-}
-
 pub fn in(comptime T: type, port: u16) T {
     const instruction = comptime switch (T) {
         u8 => "inb %[port], %[ret]",
