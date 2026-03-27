@@ -22,15 +22,15 @@ export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
         \\    mov %%ax, %%fs
         \\    mov %%ax, %%gs
         \\    mov %%ax, %%ss
-        \\    jmp %[stage2_entry:a]
+        \\    jmp %[stage2:a]
         :
         : [code_32] "i" (comptime gdt.descriptorSegment(.Code32)),
           [data_32] "i" (comptime gdt.descriptorSegment(.Data32)),
-          [stage2_entry] "X" (&stageTwoEntry),
+          [stage2] "X" (&secondStage),
     );
 }
 
-fn stageTwoEntry() callconv(.c) noreturn {
+fn secondStage() noreturn {
     vga.clear();
 
     const required_features =
