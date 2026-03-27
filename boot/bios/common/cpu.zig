@@ -31,7 +31,7 @@ pub const Feature = enum(u32) {
     pbe = 1 << 31,
 };
 
-pub fn cpuidFeatures() u32 {
+pub fn cpuid() u32 {
     return asm ("cpuid"
         : [ret] "={edx}" (-> u32),
         : [a] "{eax}" (1),
