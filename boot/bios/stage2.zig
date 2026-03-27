@@ -1,7 +1,6 @@
 const std = @import("std");
 const a20 = @import("common/a20.zig");
 const gdt = @import("common/gdt.zig");
-const mode = @import("common/mode.zig");
 const real = @import("common/real.zig");
 const vga = @import("common/vga.zig");
 
