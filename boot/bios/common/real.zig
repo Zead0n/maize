@@ -55,7 +55,7 @@ comptime {
         \\    mov %ax, %gs
         \\    mov %ax, %ss
         \\
-        // 0x8000 - 64 = 0x7fc0
+        //    0x8000 - 64 = 0x7fc0
         \\    movl $0x7fc0, %esp
         \\
         \\    pop %eax
