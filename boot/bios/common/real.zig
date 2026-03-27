@@ -31,9 +31,9 @@ comptime {
         \\
         \\    lidt _rm_idt
         \\
-        \\    ljmp $0x18, $bit_16
+        \\    ljmp $0x18, $realInt.0
         \\.code16
-        \\bit_16:
+        \\realInt.0:
         \\    movw $0x20, %ax
         \\    movw %ax, %ds
         \\    movw %ax, %es
@@ -46,8 +46,8 @@ comptime {
         \\    and $0xfe, %al
         \\    movl %eax, %cr0
         \\
-        \\    ljmp $0, $rm
-        \\rm:
+        \\    ljmp $0, $realInt.1
+        \\realInt.1:
         \\    xor %ax, %ax
         \\    mov %ax, %ds
         \\    mov %ax, %es
@@ -90,9 +90,9 @@ comptime {
         \\    movl _cr0, %eax
         \\    movl %eax, %cr0
         \\
-        \\    ljmp $0x8, $bit_32
+        \\    ljmp $0x8, $realInt.2
         \\.code32
-        \\bit_32:
+        \\realInt.2:
         \\    movw $0x10, %ax
         \\    movw %ax, %ds
         \\    movw %ax, %es
