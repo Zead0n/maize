@@ -30,7 +30,7 @@ pub fn out(comptime T: type, port: u16, value: T) void {
 
     asm volatile (instruction
         :
-        : [value] "r" (value),
+        : [value] "{ax}" (value),
           [port] "X" (port),
         : .{ .memory = true });
 }
