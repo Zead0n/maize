@@ -23,14 +23,14 @@ pub fn in(comptime T: type, port: u16) T {
 
 pub fn out(comptime T: type, port: u16, value: T) void {
     const instruction = comptime switch (T) {
-        u8 => "outb %%al, %[port]",
-        u16 => "outw %%ax, %[port]",
+        u8 => "outb %[value], %[port]",
+        u16 => "outw %[value], %[port]",
         else => @compileError("Unsupported type"),
     };
 
     asm volatile (instruction
         :
-        : [a] "{ax}" (value),
+        : [value] "r" (value),
           [port] "X" (port),
         : .{ .memory = true });
 }
@@ -57,7 +57,7 @@ pub fn memOut(comptime T: type, addr: usize, value: T) void {
 
     asm volatile (instruction
         :
-        : [addr] "i" (addr),
-          [value] "ir" (value),
+        : [value] "ir" (value),
+          [addr] "i" (addr),
         : .{ .memory = true });
 }
