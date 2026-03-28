@@ -9,7 +9,8 @@ pub const BiosStages = struct {
 };
 
 pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
-    const bios_dir = b.path("boot/bios");
+    const boot_dir = b.path("boot");
+    const bios_dir = boot_dir.path(b, "bios");
 
     const stage1_mod = b.createModule(.{
         .target = b.resolveTargetQuery(arch.getTargetQuery(.code16)),
@@ -24,11 +25,18 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
     });
     stage1_elf.setLinkerScript(bios_dir.path(b, "stage1_link.ld"));
 
+    const maize_mod = b.createModule(.{
+        .target = b.resolveTargetQuery(arch.getTargetQuery(.none)),
+        .optimize = .ReleaseSmall,
+        .root_source_file = boot_dir.path(b, "main.zig"),
+    });
+
     const stage2_mod = b.createModule(.{
         .target = b.resolveTargetQuery(arch.getTargetQuery(.none)),
         .optimize = .ReleaseSmall,
         .root_source_file = bios_dir.path(b, "stage2.zig"),
     });
+    stage2_mod.addImport("maize", maize_mod);
 
     const stage2_elf = b.addExecutable(.{
         .name = "stage2.elf",

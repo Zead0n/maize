@@ -2,8 +2,9 @@ const std = @import("std");
 const a20 = @import("common/a20.zig");
 const cpu = @import("common/cpu.zig");
 const gdt = @import("common/gdt.zig");
-const real = @import("common/real.zig");
 const vga = @import("common/vga.zig");
+
+const maize = @import("maize");
 
 export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
     asm volatile (
@@ -30,7 +31,7 @@ export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
     );
 }
 
-fn secondStage() noreturn {
+fn bios_init() void {
     vga.clear();
 
     const required_features =
@@ -41,12 +42,20 @@ fn secondStage() noreturn {
     if (cpu.cpuid() & required_features != required_features) @panic("Missing required cpu features");
 
     a20.enable() catch @panic("Failed to enable A20");
+}
+
+fn secondStage() noreturn {
+    const bios_firm = maize.BootFirm{
+        .init = bios_init,
+    };
+
+    maize.run(bios_firm);
 
     @panic("Entry 2");
 }
 
-pub const panic = std.debug.FullPanic(fail);
-fn fail(msg: []const u8, _: ?usize) noreturn {
+pub const panic = std.debug.FullPanic(panicFn);
+fn panicFn(msg: []const u8, _: ?usize) noreturn {
     vga.printString("Maize [ ");
     vga.setColor(.light_red, .black);
     vga.printString("PANIC");
