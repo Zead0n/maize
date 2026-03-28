@@ -30,4 +30,4 @@ after_bpb:
     cld
 
     mov %dl, drive
-    call firstStage
+    jmp firstStage
