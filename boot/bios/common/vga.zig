@@ -91,7 +91,7 @@ fn drain(w: *std.Io.Writer, data: []const []const u8, splat: usize) !usize {
         w.end = 0;
     }
 
-    for (data) |bytes| {
+    for (data[0 .. data.len - 1]) |bytes| {
         printString(bytes);
         consumed += bytes.len;
     }
