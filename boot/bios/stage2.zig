@@ -1,10 +1,22 @@
 const std = @import("std");
+const maize = @import("maize");
 const a20 = @import("common/a20.zig");
 const cpu = @import("common/cpu.zig");
 const gdt = @import("common/gdt.zig");
 const vga = @import("common/vga.zig");
 
-const maize = @import("maize");
+fn biosInit() void {
+    vga.clear();
+
+    const required_features =
+        @intFromEnum(cpu.Feature.fpu) |
+        @intFromEnum(cpu.Feature.pse) |
+        @intFromEnum(cpu.Feature.pge) |
+        @intFromEnum(cpu.Feature.fxsr);
+    if (cpu.cpuid() & required_features != required_features) @panic("Missing required cpu features");
+
+    a20.enable() catch @panic("Failed to enable A20");
+}
 
 export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
     asm volatile (
@@ -31,22 +43,9 @@ export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
     );
 }
 
-fn bios_init() void {
-    vga.clear();
-
-    const required_features =
-        @intFromEnum(cpu.Feature.fpu) |
-        @intFromEnum(cpu.Feature.pse) |
-        @intFromEnum(cpu.Feature.pge) |
-        @intFromEnum(cpu.Feature.fxsr);
-    if (cpu.cpuid() & required_features != required_features) @panic("Missing required cpu features");
-
-    a20.enable() catch @panic("Failed to enable A20");
-}
-
 fn secondStage() noreturn {
     const bios_firm = maize.BootFirm{
-        .init = bios_init,
+        .init = biosInit,
     };
 
     maize.run(bios_firm);
