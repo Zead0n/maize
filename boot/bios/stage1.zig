@@ -52,7 +52,7 @@ export fn firstStage() noreturn {
 
     const dap: DiskAddressPacket = .{
         .lba = 1,
-        .blocks = 8,
+        .blocks = 63,
         .offset = 0,
         .segment = (STAGE_TWO_DEST >> 4),
     };
