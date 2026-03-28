@@ -48,7 +48,7 @@ fn puts(chars: []const u8) void {
 
 export var drive: u16 = 0;
 export fn firstStage() noreturn {
-    if (!checkExt13(drive)) @panic("!E");
+    if (!checkExt13(drive)) @panic("E");
 
     const dap: DiskAddressPacket = .{
         .lba = 1,
@@ -57,7 +57,7 @@ export fn firstStage() noreturn {
         .segment = (STAGE_TWO_DEST >> 4),
     };
 
-    dap.read(drive) catch @panic("!R");
+    dap.read(drive) catch @panic("R");
 
     asm volatile (
         \\push %%dx
@@ -67,13 +67,13 @@ export fn firstStage() noreturn {
           [stage2_addr] "i" (STAGE_TWO_DEST),
     );
 
-    @panic("!1");
+    @panic("1");
 }
 
 pub const panic = std.debug.FullPanic(rmPanic);
 fn rmPanic(msg: []const u8, _: ?usize) noreturn {
+    puts("! ");
     puts(msg);
-    puts("\n\r");
 
     while (true)
         asm volatile ("hlt");
