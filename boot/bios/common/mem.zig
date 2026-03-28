@@ -59,7 +59,7 @@ pub fn detectMemory() SmapError![]SmapEntry {
         entries_count += 1;
 
         if (count_id == 0)
-            return entries[0..entries_count];
+            return entries[0 .. entries_count - 1];
     }
 
     return error.TooManyEntries;
