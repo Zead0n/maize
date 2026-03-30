@@ -3,6 +3,7 @@ const maize = @import("maize");
 const a20 = @import("common/a20.zig");
 const cpu = @import("common/cpu.zig");
 const gdt = @import("common/gdt.zig");
+const vbe = @import("common/vbe.zig");
 const vga = @import("common/vga.zig");
 
 fn biosInit() void {
@@ -16,6 +17,8 @@ fn biosInit() void {
     if (cpu.cpuid() & required_features != required_features) @panic("Missing required cpu features");
 
     a20.enable() catch @panic("Failed to enable A20");
+
+    vbe.setResolution();
 }
 
 export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
