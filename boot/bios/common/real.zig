@@ -120,7 +120,7 @@ pub const Thunk = packed struct {
     edi: u32 = 0,
     es: u16 = 0,
 
-    pub fn int(self: @This(), num: u8) Thunk {
+    pub fn int(self: @This(), num: u8) @This() {
         self.write();
         realInt(num);
         return thunk.*;
