@@ -18,7 +18,7 @@ fn biosInit() void {
 
     a20.enable() catch @panic("Failed to enable A20");
 
-    vbe.setResolution();
+    vbe.setResolution() catch @panic("Failed to set resolution");
 }
 
 export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
