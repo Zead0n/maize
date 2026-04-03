@@ -90,16 +90,16 @@ fn fetchBestResolution() error{FailedEdid}!Resolution {
     };
 }
 
-pub fn setResolution() void {
+pub fn setResolution() !void {
     var current_vbe_thunk = real.Thunk{ .eax = 0x4f03 };
     current_vbe_thunk = current_vbe_thunk.int(0x10);
     if (@as(u16, @truncate(current_vbe_thunk.eax)) != 0x004f)
-        return;
+        return error.FailedCurrentMode;
 
     var best_mode = @as(u16, @truncate(current_vbe_thunk.ebx));
     const best_resolution = fetchBestResolution() catch Resolution{ .x = 640, .y = 480 };
 
-    const vbe_info = fetchInfo() catch @panic("Failed to retrieve vbe info.");
+    const vbe_info = try fetchInfo();
     const mode_addr = sys.memFixed(vbe_info.mode_seg, vbe_info.mode_off);
     var i: usize = 0;
     while (mode_addr + i < 0xffff) : (i += 1) {
@@ -113,6 +113,7 @@ pub fn setResolution() void {
         };
 
         mode_thunk = mode_thunk.int(0x10);
+
         if (@as(u16, @truncate(mode_thunk.eax)) != 0x004f)
             continue;
 
@@ -134,5 +135,5 @@ pub fn setResolution() void {
     };
     set_vbe_thunk = set_vbe_thunk.int(0x10);
     if (@as(u16, @truncate(set_vbe_thunk.eax)) != 0x004f)
-        return;
+        return error.FailedSetMode;
 }
