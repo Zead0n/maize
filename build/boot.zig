@@ -9,8 +9,8 @@ pub const BiosStages = struct {
 };
 
 pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
-    const boot_dir = b.path("boot");
-    const bios_dir = boot_dir.path(b, "bios");
+    const src_dir = b.path("src");
+    const bios_dir = src_dir.path(b, "bios");
 
     const stage1_mod = b.createModule(.{
         .target = b.resolveTargetQuery(arch.getTargetQuery(.code16)),
@@ -28,7 +28,7 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
     const maize_mod = b.createModule(.{
         .target = b.resolveTargetQuery(arch.getTargetQuery(.none)),
         .optimize = .ReleaseSmall,
-        .root_source_file = boot_dir.path(b, "main.zig"),
+        .root_source_file = src_dir.path(b, "main.zig"),
     });
 
     const stage2_mod = b.createModule(.{
