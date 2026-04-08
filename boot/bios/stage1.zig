@@ -25,16 +25,16 @@ pub const DiskAddressPacket = packed struct {
 };
 
 pub fn checkExt13(drive_num: u16) bool {
-    var res: u16 = undefined;
+    var result: u16 = undefined;
     asm (
         \\int $0x13
-        : [ret] "={bx}" (res),
+        : [ret] "={bx}" (result),
         : [func] "{ax}" (0x4100),
           [magic] "{bx}" (0x55aa),
           [drive] "{dx}" (drive_num),
     );
 
-    return res == 0xaa55;
+    return result == 0xaa55;
 }
 
 fn puts(chars: []const u8) void {
