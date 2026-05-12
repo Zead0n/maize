@@ -12,8 +12,16 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
     const src_dir = b.path("src");
     const bios_dir = src_dir.path(b, "bios");
 
+    const stage1_query: std.Target.Query = .{
+        .cpu_arch = .x86,
+        .os_tag = .freestanding,
+        .abi = .none,
+        .cpu_features_add = std.Target.x86.featureSet(&.{ .popcnt, .soft_float, .@"16bit_mode" }),
+        .cpu_features_sub = std.Target.x86.featureSet(&.{ .avx, .avx2, .sse, .sse2, .mmx }),
+    };
+
     const stage1_mod = b.createModule(.{
-        .target = b.resolveTargetQuery(arch_util.getX8616Target()),
+        .target = b.resolveTargetQuery(stage1_query),
         .optimize = .ReleaseSmall,
         .root_source_file = bios_dir.path(b, "stage1.zig"),
     });
