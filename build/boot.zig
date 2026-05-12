@@ -12,10 +12,11 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
     const src_dir = b.path("src");
     const bios_dir = src_dir.path(b, "bios");
 
+    // NOTE: `code16` was removed in 0.16.0, code in `stage1.zig` has been moved to `stage1_entry.S`
     const stage1_mod = b.createModule(.{
-        .target = b.resolveTargetQuery(arch.getTargetQuery(.code16)),
+        .target = b.resolveTargetQuery(arch.getTargetQuery(.none)),
         .optimize = .ReleaseSmall,
-        .root_source_file = bios_dir.path(b, "stage1.zig"),
+        // .root_source_file = bios_dir.path(b, "stage1.zig"),
     });
     stage1_mod.addAssemblyFile(bios_dir.path(b, "stage1_entry.S"));
 

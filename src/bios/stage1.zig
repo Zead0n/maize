@@ -1,3 +1,5 @@
+// NOTE: zig 0.16.0 has removed the `code16` so this code is unusable for the time being.
+
 const std = @import("std");
 
 const STAGE_TWO_DEST = 0xf000;
