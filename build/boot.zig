@@ -12,6 +12,7 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
     const src_dir = b.path("src");
     const bios_dir = src_dir.path(b, "bios");
 
+    // NOTE: stage1 needs a custom target query due to the `code16` abi being no longer available
     const stage1_query: std.Target.Query = .{
         .cpu_arch = .x86,
         .os_tag = .freestanding,

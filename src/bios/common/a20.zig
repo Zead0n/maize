@@ -57,7 +57,7 @@ fn check() bool {
 }
 
 fn kbcWait(mask: u8, expected: u8) bool {
-    const timeout = 50000;
+    const timeout = 20000;
     for (0..timeout) |_| {
         if ((sys.in(u8, 0x64) & mask) == expected)
             return true;

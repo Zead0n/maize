@@ -1,7 +1,5 @@
 const std = @import("std");
 
-const STAGE_TWO_DEST = 0xf000;
-
 pub const DiskAddressPacket = packed struct {
     size: u8 = 0x10,
     reserved: u8 = 0,
@@ -37,19 +35,11 @@ pub fn checkExt13(drive_num: u16) bool {
     return result == 0xaa55;
 }
 
-fn puts(chars: []const u8) void {
-    for (chars) |char|
-        asm volatile (
-            \\int $0x10
-            :
-            : [ax] "{ax}" (0x0e00 | @as(u16, char)),
-        );
-}
-
 export var drive: u16 = 0;
 export fn firstStage() noreturn {
     if (!checkExt13(drive)) @panic("E");
 
+    const STAGE_TWO_DEST = 0xf000;
     const dap: DiskAddressPacket = .{
         .lba = 1,
         .blocks = 63,
@@ -61,18 +51,27 @@ export fn firstStage() noreturn {
 
     asm volatile (
         \\push %%dx
-        \\calll %[stage2_addr:c]
+        \\ljmp %[stage2_seg], $0
         :
         : [drive] "{dx}" (drive),
-          [stage2_addr] "i" (STAGE_TWO_DEST),
+          [stage2_seg] "i" (STAGE_TWO_DEST >> 4),
     );
 
-    @panic("1");
+    unreachable;
+}
+
+fn puts(chars: []const u8) void {
+    for (chars) |char|
+        asm volatile (
+            \\int $0x10
+            :
+            : [ax] "{ax}" (0x0e00 | @as(u16, char)),
+        );
 }
 
 pub const panic = std.debug.FullPanic(rmPanic);
 fn rmPanic(msg: []const u8, _: ?usize) noreturn {
-    puts("! ");
+    puts("!");
     puts(msg);
 
     while (true)
