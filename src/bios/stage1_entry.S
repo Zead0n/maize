@@ -29,5 +29,4 @@ after_bpb:
 
     cld
 
-    mov %dl, drive
     jmp firstStage

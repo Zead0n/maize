@@ -8,8 +8,19 @@ pub const DiskAddressPacket = packed struct {
     segment: u16,
     lba: u64,
 
-    pub fn read(self: @This(), disk: u16) error{ReadFailed}!void {
-        const result: u16 = asm volatile (
+    pub fn read(self: @This(), disk: u16) error{ NotSupported, ReadFailed }!void {
+        const check_value: u16 = asm (
+            \\int $0x13
+            : [ret] "={bx}" (-> u16),
+            : [func] "{ax}" (0x4100),
+              [magic] "{bx}" (0x55aa),
+              [drive] "{dx}" (disk),
+        );
+
+        if (check_value != 0xaa55)
+            return error.NotSupported;
+
+        const result: u16 = asm (
             \\int $0x13
             : [ret] "={ax}" (-> u16),
             : [ax] "{ax}" (0x4200),
@@ -22,39 +33,30 @@ pub const DiskAddressPacket = packed struct {
     }
 };
 
-pub fn checkExt13(drive_num: u16) bool {
-    var result: u16 = undefined;
-    asm (
-        \\int $0x13
-        : [ret] "={bx}" (result),
-        : [func] "{ax}" (0x4100),
-          [magic] "{bx}" (0x55aa),
-          [drive] "{dx}" (drive_num),
+const STAGE2_SEG = 0xf000 >> 4;
+
+export fn firstStage() noreturn {
+    const drive: u16 = asm (
+        \\movw %%dx, %[ret]
+        : [ret] "=r" (-> u16),
     );
 
-    return result == 0xaa55;
-}
-
-export var drive: u16 = 0;
-export fn firstStage() noreturn {
-    if (!checkExt13(drive)) @panic("E");
-
-    const STAGE_TWO_DEST = 0xf000;
     const dap: DiskAddressPacket = .{
         .lba = 1,
         .blocks = 63,
         .offset = 0,
-        .segment = (STAGE_TWO_DEST >> 4),
+        .segment = (STAGE2_SEG),
     };
 
-    dap.read(drive) catch @panic("R");
+    dap.read(drive) catch |err| switch (err) {
+        error.NotSupported => @panic("E"),
+        error.ReadFailed => @panic("R"),
+    };
 
     asm volatile (
-        \\push %%dx
         \\ljmp %[stage2_seg], $0
         :
-        : [drive] "{dx}" (drive),
-          [stage2_seg] "i" (STAGE_TWO_DEST >> 4),
+        : [stage2_seg] "i" (STAGE2_SEG),
     );
 
     unreachable;
