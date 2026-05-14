@@ -1,19 +1,19 @@
 const sys = @import("sys.zig");
 const real = @import("real.zig");
 
-const VbeInfo = packed struct {
-    signature: @Vector(4, u8),
+const VbeInfo = extern struct {
+    signature: [4]u8,
     version: u16,
     oem_off: u16,
     oem_seg: u16,
-    capabilities: @Vector(4, u8),
+    capabilities: [4]u8,
     mode_off: u16,
     mode_seg: u16,
     total_memory: u16,
-    reserved: @Vector(492, u8),
+    reserved: [492]u8,
 };
 
-const VbeMode = packed struct {
+const VbeMode = extern struct {
     attributes: u16,
     window_a: u8,
     window_b: u8,
@@ -46,8 +46,8 @@ const VbeMode = packed struct {
     framebuffer: u32,
     off_screen_mem_off: u32,
     off_screen_mem_size: u32,
-    // reserved: [206]u8,
-    reserved: @Vector(206, u8),
+    reserved: [206]u8,
+    // reserved: @Vector(206, u8),
 };
 
 const Resolution = struct {
