@@ -44,7 +44,8 @@ export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
     );
 }
 
-fn secondStage() noreturn {
+fn secondStage(drive: u8) callconv(.{ .x86_sysv = .{} }) noreturn {
+    _ = drive;
     const bios_firm = maize.BootFirm{
         .init = biosInit,
     };
