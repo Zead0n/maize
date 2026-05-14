@@ -8,7 +8,7 @@ pub const DiskAddressPacket = packed struct {
     segment: u16,
     lba: u64,
 
-    pub fn read(self: @This(), disk: u16) error{ NotSupported, ReadFailed }!void {
+    pub fn read(self: @This(), disk: u8) error{ NotSupported, ReadFailed }!void {
         const check_value: u16 = asm (
             \\int $0x13
             : [ret] "={bx}" (-> u16),
@@ -33,33 +33,34 @@ pub const DiskAddressPacket = packed struct {
     }
 };
 
-const STAGE2_SEG = 0xf000 >> 4;
+const STAGE2_DEST = 0xa000;
+const DAP: DiskAddressPacket = .{
+    .lba = 1,
+    .blocks = 63,
+    .offset = 0,
+    .segment = (STAGE2_DEST >> 4),
+};
 
 export fn firstStage() noreturn {
-    const drive: u16 = asm (
-        \\movw %%dx, %[ret]
-        : [ret] "=r" (-> u16),
+    const drive: u8 = asm (
+        \\movb %%dl, %[ret]
+        : [ret] "=r" (-> u8),
     );
 
-    const dap: DiskAddressPacket = .{
-        .lba = 1,
-        .blocks = 63,
-        .offset = 0,
-        .segment = (STAGE2_SEG),
-    };
-
-    dap.read(drive) catch |err| switch (err) {
+    DAP.read(drive) catch |err| switch (err) {
         error.NotSupported => @panic("E"),
         error.ReadFailed => @panic("R"),
     };
 
     asm volatile (
-        \\ljmp %[stage2_seg], $0
+        \\push %[disk]
+        \\calll %[stage2:a]
         :
-        : [stage2_seg] "i" (STAGE2_SEG),
+        : [disk] "{dx}" (@as(u16, drive)),
+          [stage2] "i" (STAGE2_DEST),
     );
 
-    unreachable;
+    @panic("1");
 }
 
 fn puts(chars: []const u8) void {
