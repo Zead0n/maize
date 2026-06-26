@@ -9,8 +9,8 @@ pub const BiosStages = struct {
 };
 
 pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
-    const core_dir = b.path("core");
-    const bios_dir = core_dir.path(b, "bios");
+    const src_dir = b.path("src");
+    const bios_dir = src_dir.path(b, "bios");
 
     // NOTE: stage1 needs a custom target query due to the `code16` abi being no longer available
     const stage1_query: std.Target.Query = .{
@@ -37,7 +37,7 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
     const maize_mod = b.createModule(.{
         .target = b.resolveTargetQuery(arch.getTargetQuery(.none)),
         .optimize = .ReleaseSmall,
-        .root_source_file = core_dir.path(b, "main.zig"),
+        .root_source_file = src_dir.path(b, "main.zig"),
     });
 
     const stage2_mod = b.createModule(.{

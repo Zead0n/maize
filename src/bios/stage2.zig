@@ -17,10 +17,6 @@ fn biosInit() void {
     if (cpu.cpuid() & required_features != required_features) @panic("Missing required cpu features");
 
     a20.enable() catch @panic("Failed to enable A20");
-
-    vbe.setResolution() catch @panic("VBE");
-
-    @panic("Finish");
 }
 
 export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
