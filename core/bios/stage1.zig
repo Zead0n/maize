@@ -33,7 +33,7 @@ pub const DiskAddressPacket = packed struct {
     }
 };
 
-const STAGE2_DEST = 0xa000;
+const STAGE2_DEST = 0x8000;
 const DAP: DiskAddressPacket = .{
     .lba = 1,
     .blocks = 63,
