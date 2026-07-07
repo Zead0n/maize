@@ -1,13 +1,13 @@
 const std = @import("std");
 const arch = @import("build/arch.zig");
-const boot = @import("build/boot.zig");
+const bios = @import("build/bios.zig");
 const qemu = @import("build/commands/qemu.zig");
 
 pub fn build(b: *std.Build) void {
     const arch_opt = b.option(arch.Architecture, "arch", "Cpu architecture (defaults to x86)") orelse .x86;
 
-    const stages = boot.buildBiosStages(b, arch_opt);
-    const bios_bootloader = boot.buildBiosBootloader(
+    const stages = bios.buildBiosStages(b, arch_opt);
+    const bios_bootloader = bios.buildBiosBootloader(
         b,
         b.fmt("maize-bios-{s}.img", .{@tagName(arch_opt)}),
         stages,
