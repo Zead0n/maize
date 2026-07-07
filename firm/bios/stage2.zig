@@ -6,8 +6,10 @@ const gdt = @import("common/gdt.zig");
 const vbe = @import("common/vbe.zig");
 const vga = @import("common/vga.zig");
 
-fn biosInit() void {
+fn biosInit() anyerror!void {
     vga.clear();
+
+    try a20.enable();
 
     const required_features =
         @intFromEnum(cpu.Feature.fpu) |
@@ -15,8 +17,6 @@ fn biosInit() void {
         @intFromEnum(cpu.Feature.pge) |
         @intFromEnum(cpu.Feature.fxsr);
     if (cpu.cpuid() & required_features != required_features) @panic("Missing required cpu features");
-
-    a20.enable() catch @panic("Failed to enable A20");
 }
 
 export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
