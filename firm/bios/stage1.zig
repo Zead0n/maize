@@ -65,16 +65,20 @@ export fn firstStage() noreturn {
 
 fn puts(chars: []const u8) void {
     for (chars) |char|
-        asm volatile (
-            \\int $0x10
-            :
-            : [ax] "{ax}" (0x0e00 | @as(u16, char)),
-        );
+        put(char);
+}
+
+fn put(char: u8) void {
+    asm volatile (
+        \\int $0x10
+        :
+        : [ax] "{ax}" (0x0e00 | @as(u16, char)),
+    );
 }
 
 pub const panic = std.debug.FullPanic(rmPanic);
 fn rmPanic(msg: []const u8, _: ?usize) noreturn {
-    puts("!");
+    put('!');
     puts(msg);
 
     while (true)

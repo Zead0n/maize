@@ -6,6 +6,11 @@ const gdt = @import("common/gdt.zig");
 const vbe = @import("common/vbe.zig");
 const vga = @import("common/vga.zig");
 
+const BIOS_FIRM = maize.BootFirm{
+    .init = biosInit,
+    .setResolution = vbe.setResolution,
+};
+
 fn biosInit() anyerror!void {
     vga.clear();
 
@@ -46,11 +51,8 @@ export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
 
 fn secondStage(drive: u8) callconv(.{ .x86_sysv = .{} }) noreturn {
     _ = drive;
-    const bios_firm = maize.BootFirm{
-        .init = biosInit,
-    };
 
-    maize.run(bios_firm);
+    maize.run(BIOS_FIRM);
 
     @panic("Entry 2");
 }
