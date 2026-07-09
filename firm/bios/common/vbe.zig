@@ -55,7 +55,7 @@ const Resolution = struct {
     y: u16,
 };
 
-fn fetchInfo() error{FailedInfo}!VbeInfo {
+fn fetchInfo() !VbeInfo {
     var vbe_info: VbeInfo = undefined;
     var vbe_thunk: real.Thunk = .{
         .eax = 0x4f00,
@@ -65,12 +65,12 @@ fn fetchInfo() error{FailedInfo}!VbeInfo {
 
     vbe_thunk = vbe_thunk.int(0x10);
     if (@as(u16, @truncate(vbe_thunk.eax)) != 0x004f)
-        return error.FailedInfo;
+        return error.Info;
 
     return vbe_info;
 }
 
-fn fetchBestResolution() error{FailedEdid}!Resolution {
+fn fetchBestResolution() !Resolution {
     var edid: [128]u8 = undefined;
 
     var resolution_thunk = real.Thunk{
@@ -82,7 +82,7 @@ fn fetchBestResolution() error{FailedEdid}!Resolution {
 
     resolution_thunk = resolution_thunk.int(0x10);
     if (@as(u16, @truncate(resolution_thunk.eax)) != 0x004f)
-        return error.FailedEdid;
+        return error.Edid;
 
     return .{
         .x = @as(u16, edid[0x38]) | @as(u16, edid[0x3a] & 0xf0) << 4,
@@ -94,7 +94,7 @@ pub fn setResolution() !void {
     var current_vbe_thunk = real.Thunk{ .eax = 0x4f03 };
     current_vbe_thunk = current_vbe_thunk.int(0x10);
     if (@as(u16, @truncate(current_vbe_thunk.eax)) != 0x004f)
-        return error.FailedCurrentMode;
+        return error.CurrentMode;
 
     var best_mode = @as(u16, @truncate(current_vbe_thunk.ebx));
     const best_resolution = fetchBestResolution() catch Resolution{ .x = 640, .y = 480 };
@@ -135,5 +135,5 @@ pub fn setResolution() !void {
     };
     set_vbe_thunk = set_vbe_thunk.int(0x10);
     if (@as(u16, @truncate(set_vbe_thunk.eax)) != 0x004f)
-        return error.FailedSetMode;
+        return error.SetMode;
 }
