@@ -61,18 +61,10 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
 }
 
 pub fn buildBiosBootloader(b: *std.Build, name: []const u8, stages: BiosStages) *std.Build.Step.InstallFile {
-    const stage1_bin = b.addObjCopy(stages.stage1.getEmittedBin(), .{
-        .extract_to_separate_file = true,
-        .basename = "stage1",
-        .format = .bin,
-    });
+    const stage1_bin = b.addObjCopy(stages.stage1.getEmittedBin(), .{ .format = .bin });
     stage1_bin.step.dependOn(&stages.stage1.step);
 
-    const stage2_bin = b.addObjCopy(stages.stage2.getEmittedBin(), .{
-        .extract_to_separate_file = true,
-        .basename = "stage2",
-        .format = .bin,
-    });
+    const stage2_bin = b.addObjCopy(stages.stage2.getEmittedBin(), .{ .format = .bin });
     stage2_bin.step.dependOn(&stages.stage2.step);
 
     const boot_files = b.addWriteFiles();
