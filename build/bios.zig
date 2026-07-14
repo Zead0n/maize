@@ -45,6 +45,7 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
         .optimize = .ReleaseSmall,
         .root_source_file = bios_dir.path(b, "stage2.zig"),
     });
+    stage2_mod.addAssemblyFile(bios_dir.path(b, "common/real.S"));
     stage2_mod.addImport("maize", maize_mod);
 
     const stage2_elf = b.addExecutable(.{
@@ -61,13 +62,15 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
 
 pub fn buildBiosBootloader(b: *std.Build, name: []const u8, stages: BiosStages) *std.Build.Step.InstallFile {
     const stage1_bin = b.addObjCopy(stages.stage1.getEmittedBin(), .{
-        .basename = "stage1.bin",
+        .extract_to_separate_file = true,
+        .basename = "stage1",
         .format = .bin,
     });
     stage1_bin.step.dependOn(&stages.stage1.step);
 
     const stage2_bin = b.addObjCopy(stages.stage2.getEmittedBin(), .{
-        .basename = "stage2.bin",
+        .extract_to_separate_file = true,
+        .basename = "stage2",
         .format = .bin,
     });
     stage2_bin.step.dependOn(&stages.stage2.step);

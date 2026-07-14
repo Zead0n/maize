@@ -18,14 +18,26 @@ pub fn build(b: *std.Build) void {
 
     const bios_disect_step = b.step("bios-disect", "Disect bios stages");
     const bios_install_dir = std.Build.InstallDir{ .custom = "bios" };
-    const stage1_elf_install = b.addInstallFileWithDir(stages.stage1.getEmittedBin(), bios_install_dir, "stage1.elf");
+    const stage1_elf = stages.stage1.getEmittedBin();
+    const stage1_bin = b.addObjCopy(stage1_elf, .{ .extract_to_separate_file = true, .format = .bin });
     const stage1_asm_install = b.addInstallFileWithDir(stages.stage1.getEmittedAsm(), bios_install_dir, "stage1.asm");
-    const stage2_elf_install = b.addInstallFileWithDir(stages.stage1.getEmittedBin(), bios_install_dir, "stage2.elf");
-    const stage2_asm_install = b.addInstallFileWithDir(stages.stage1.getEmittedAsm(), bios_install_dir, "stage2.asm");
-    bios_disect_step.dependOn(&stage1_elf_install.step);
+    const stage1_elf_install = b.addInstallFileWithDir(stage1_elf, bios_install_dir, "stage1.elf");
+    const stage1_bin_install = b.addInstallFileWithDir(stage1_bin.getOutput(), bios_install_dir, "stage1.bin");
+    stage1_bin_install.step.dependOn(&stage1_bin.step);
+
+    const stage2_elf = stages.stage2.getEmittedBin();
+    const stage2_bin = b.addObjCopy(stage2_elf, .{ .extract_to_separate_file = true, .format = .bin });
+    const stage2_asm_install = b.addInstallFileWithDir(stages.stage2.getEmittedAsm(), bios_install_dir, "stage2.asm");
+    const stage2_elf_install = b.addInstallFileWithDir(stage2_elf, bios_install_dir, "stage2.elf");
+    const stage2_bin_install = b.addInstallFileWithDir(stage2_bin.getOutput(), bios_install_dir, "stage2.bin");
+    stage2_bin_install.step.dependOn(&stage2_bin.step);
+
     bios_disect_step.dependOn(&stage1_asm_install.step);
-    bios_disect_step.dependOn(&stage2_elf_install.step);
+    bios_disect_step.dependOn(&stage1_elf_install.step);
+    bios_disect_step.dependOn(&stage1_bin_install.step);
     bios_disect_step.dependOn(&stage2_asm_install.step);
+    bios_disect_step.dependOn(&stage2_elf_install.step);
+    bios_disect_step.dependOn(&stage2_bin_install.step);
 
     const bios_qemu_step = b.step("bios-qemu", "Build bios and run qemu");
     const bios_qemu_cmd = qemu.createQemuCommand(b, bios_bootloader.source, arch_opt.toStdArch());
