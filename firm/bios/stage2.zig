@@ -10,7 +10,7 @@ pub const std_options: std.Options = .{
     .logFn = biosLogFn,
 };
 
-const BIOS_FIRM = maize.BootFirm{
+const bios_firm = maize.BootFirm{
     .init = biosInit,
     .setResolution = vbe.setResolution,
 };
@@ -92,7 +92,7 @@ export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
 fn secondStage(drive: u8) callconv(.{ .x86_sysv = .{} }) noreturn {
     _ = drive;
 
-    maize.run(BIOS_FIRM) catch |e| @panic(@errorName(e));
+    bios_firm.run() catch |e| @panic(@errorName(e));
 
     @panic("Entry 2");
 }
