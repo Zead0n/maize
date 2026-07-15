@@ -1,5 +1,6 @@
 const sys = @import("sys.zig");
 const real = @import("real.zig");
+const console = @import("console.zig");
 
 const VbeBlockInfo = extern struct {
     signature: [4]u8,
@@ -50,6 +51,8 @@ const VbeModeInfo = extern struct {
     // reserved: @Vector(206, u8),
 };
 
+const Resolution = struct { x: u16, y: u16 };
+
 fn getVbeBlockInfo() !VbeBlockInfo {
     var vbe_info: VbeBlockInfo = undefined;
     var vbe_thunk: real.Thunk = .{
@@ -65,7 +68,7 @@ fn getVbeBlockInfo() !VbeBlockInfo {
     return vbe_info;
 }
 
-fn getVbeModeInfo(mode: u16) !VbeModeInfo {
+fn getVbeModeInfo(mode: u32) !VbeModeInfo {
     var mode_info: VbeModeInfo = undefined;
 
     var mode_thunk = real.Thunk{
@@ -80,7 +83,7 @@ fn getVbeModeInfo(mode: u16) !VbeModeInfo {
     if (@as(u16, @truncate(mode_thunk.eax)) != 0x004f)
         return error.ModeInfo;
 
-    return mode;
+    return mode_info;
 }
 
 fn setVbeMode(mode: u16) !void {
@@ -91,6 +94,8 @@ fn setVbeMode(mode: u16) !void {
     set_vbe_thunk = set_vbe_thunk.int(0x10);
     if (@as(u16, @truncate(set_vbe_thunk.eax)) != 0x004f)
         return error.SetMode;
+
+    console.vbe_enabled = true;
 }
 
 fn getCurrentMode() !u16 {
@@ -102,7 +107,7 @@ fn getCurrentMode() !u16 {
     return @truncate(current_vbe_thunk.ebx);
 }
 
-fn getBestResolution() !struct { x: u16, y: u16 } {
+fn getBestResolution() !Resolution {
     var edid: [128]u8 = undefined;
 
     var resolution_thunk = real.Thunk{
@@ -122,50 +127,32 @@ fn getBestResolution() !struct { x: u16, y: u16 } {
     };
 }
 
-pub fn setResolution() !void {
+pub fn initVbe() !void {
     var current_vbe_thunk = real.Thunk{ .eax = 0x4f03 };
     current_vbe_thunk = current_vbe_thunk.int(0x10);
     if (@as(u16, @truncate(current_vbe_thunk.eax)) != 0x004f)
         return error.CurrentMode;
 
-    var best_mode = @as(u16, @truncate(current_vbe_thunk.ebx));
-    const best_resolution = getBestResolution() catch .{ .x = 640, .y = 480 };
+    var best_mode: u16 = @truncate(current_vbe_thunk.ebx);
+    const best_resolution = getBestResolution() catch Resolution{ .x = 640, .y = 480 };
 
     const vbe_info = try getVbeBlockInfo();
     const mode_addr = sys.memFixed(vbe_info.mode_seg, vbe_info.mode_off);
     var i: usize = 0;
     while (mode_addr + i < 0xffff) : (i += 1) {
-        var mode: VbeModeInfo = undefined;
+        const mode_info = getVbeModeInfo(mode_addr + i) catch continue;
 
-        var mode_thunk = real.Thunk{
-            .eax = 0x4f01,
-            .ecx = (mode_addr + i),
-            .edi = sys.memOffset(&mode),
-            .es = sys.memSegment(&mode),
-        };
-
-        mode_thunk = mode_thunk.int(0x10);
-
-        if (@as(u16, @truncate(mode_thunk.eax)) != 0x004f)
+        if ((mode_info.attributes & 0x80) != 0x80)
             continue;
 
-        if ((mode.attributes & 0x80) != 0x80)
+        if (mode_info.bits_per_pixel != 32)
             continue;
 
-        if (mode.bits_per_pixel != 32)
-            continue;
-
-        if (mode.res_width == best_resolution.x and mode.res_height == best_resolution.y) {
-            best_mode = @as(u16, @truncate(mode_addr + i));
+        if (mode_info.res_width == best_resolution.x and mode_info.res_height == best_resolution.y) {
+            best_mode = @truncate(mode_addr + i);
             break;
         }
     }
 
-    var set_vbe_thunk = real.Thunk{
-        .eax = 0x4f02,
-        .ebx = best_mode,
-    };
-    set_vbe_thunk = set_vbe_thunk.int(0x10);
-    if (@as(u16, @truncate(set_vbe_thunk.eax)) != 0x004f)
-        return error.SetMode;
+    try setVbeMode(best_mode);
 }

@@ -6,20 +6,11 @@ const gdt = @import("common/gdt.zig");
 const vbe = @import("common/vbe.zig");
 const vga = @import("common/vga.zig");
 
+// Root declarations
+
 pub const std_options: std.Options = .{
     .logFn = biosLogFn,
 };
-
-const bios_firm = maize.BootFirm{
-    .init = biosInit,
-    .setResolution = vbe.setResolution,
-};
-
-const REQUIRED_FEATURES: u32 =
-    @intFromEnum(cpu.Feature.fpu) |
-    @intFromEnum(cpu.Feature.pse) |
-    @intFromEnum(cpu.Feature.pge) |
-    @intFromEnum(cpu.Feature.fxsr);
 
 fn biosLogFn(
     comptime level: std.log.Level,
@@ -54,15 +45,66 @@ fn biosLogFn(
     vga.printChar('\n');
 }
 
-fn biosInit() anyerror!void {
+pub const panic = std.debug.FullPanic(panicFn);
+fn panicFn(msg: []const u8, _: ?usize) noreturn {
+    vga.printString("[");
+    vga.setColor(.red, .black);
+    vga.printString("PANIC");
+    vga.setColor(.light_gray, .black);
+    vga.printString("]: ");
+    vga.printString(msg);
+
+    while (true)
+        asm volatile ("hlt");
+
+    unreachable;
+}
+
+// Bios firm
+
+const bios_firm = maize.Firm{
+    .init = init,
+};
+
+const REQUIRED_FEATURES: u32 =
+    @intFromEnum(cpu.Feature.fpu) |
+    @intFromEnum(cpu.Feature.pse) |
+    @intFromEnum(cpu.Feature.pge) |
+    @intFromEnum(cpu.Feature.fxsr);
+
+fn init() !void {
     vga.clear();
 
-    try a20.enable();
-
-    if (cpu.cpuid() & REQUIRED_FEATURES != REQUIRED_FEATURES) {
+    if (cpu.cpuid() & REQUIRED_FEATURES != REQUIRED_FEATURES)
         return error.MissingFeatures;
-    }
+
+    try vbe.initVbe();
 }
+
+// const Bios = struct {
+//     vbe_enabled: bool,
+//
+//     fn firm(self: *@This()) maize.Firm {
+//         return .{
+//             .ptr = self,
+//             .vtable = &.{
+//                 .init = init,
+//                 .setResolution = resolution,
+//             },
+//         };
+//     }
+//
+//     fn init(_: *anyopaque) anyerror!void {
+//         vga.clear();
+//
+//         if (cpu.cpuid() & REQUIRED_FEATURES != REQUIRED_FEATURES)
+//             return error.MissingFeatures;
+//
+//         try vbe.initVbe();
+//     }
+//
+//     fn resolution(_: *anyopaque) !void {}
+// };
 
 export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
     asm volatile (
@@ -91,23 +133,9 @@ export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
 
 fn secondStage(drive: u8) callconv(.{ .x86_sysv = .{} }) noreturn {
     _ = drive;
+    a20.enable() catch @panic("Enabling A20 failed.");
 
-    bios_firm.run() catch |e| @panic(@errorName(e));
+    maize.run(&bios_firm) catch |e| @panic(@errorName(e));
 
     @panic("Entry 2");
-}
-
-pub const panic = std.debug.FullPanic(panicFn);
-fn panicFn(msg: []const u8, _: ?usize) noreturn {
-    vga.printString("[");
-    vga.setColor(.red, .black);
-    vga.printString("PANIC");
-    vga.setColor(.light_gray, .black);
-    vga.printString("]: ");
-    vga.printString(msg);
-
-    while (true)
-        asm volatile ("hlt");
-
-    unreachable;
 }

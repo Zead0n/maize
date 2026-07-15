@@ -1,3 +1,5 @@
+// const maize = @import("maize");
+
 const VgaColor = enum(u4) {
     black = 0,
     blue = 1,
@@ -19,20 +21,20 @@ const VgaColor = enum(u4) {
     fn toArgb(self: @This()) u32 {
         return switch (self) {
             .black => 0xFF000000,
-            .blue => 0xFF000080,
-            .green => 0xFF008000,
-            .cyan => 0xFF008080,
-            .red => 0xFF800000,
-            .magenta => 0xFF800080,
-            .brown => 0xFF808000,
-            .light_gray => 0xFFC0C0C0,
-            .dark_gray => 0xFF808080,
-            .light_blue => 0xFF0000FF,
-            .light_green => 0xFF00FF00,
-            .light_cyan => 0xFF00FFFF,
-            .light_red => 0xFFFF0000,
-            .light_magenta => 0xFFFF00FF,
-            .light_brown => 0xFFFFFF00,
+            .blue => 0xFF0000AA,
+            .green => 0xFF00AA00,
+            .cyan => 0xFF00AAAA,
+            .red => 0xFFAA0000,
+            .magenta => 0xFFAA00AA,
+            .brown => 0xFFAA5500,
+            .light_gray => 0xFFAAAAAA,
+            .dark_gray => 0xFF555555,
+            .light_blue => 0xFF5555FF,
+            .light_green => 0xFF55FF55,
+            .light_cyan => 0xFF55FFFF,
+            .light_red => 0xFFFF5555,
+            .light_magenta => 0xFFFF55FF,
+            .light_brown => 0xFFFFFF55,
             .white => 0xFFFFFFFF,
         };
     }
@@ -50,9 +52,9 @@ const RgbLevel = struct {
 
         fn from(value: u8) @This() {
             return switch (value) {
-                0...0x54 => .None,
-                0x55...0xA9 => .Low,
-                0xAA...0xFF => .High,
+                0x00 => .None,
+                0x01...0x80 => .Low,
+                0x81...0xFF => .High,
             };
         }
     };
@@ -121,21 +123,6 @@ const Color = union {
     }
 };
 
-const VideoInfo = struct {
-    pitch: u16,
-    width: u16,
-    height: u16,
-    bpp: u16,
-    memory_model: u8,
-    red_mask_len: u8,
-    red_mask_pos: u8,
-    green_mask_len: u8,
-    green_mask_pos: u8,
-    blue_mask_len: u8,
-    blue_mask_pos: u8,
-    addr: usize,
-};
-
 var width: u32 = 80;
 var height: u32 = 25;
 var background: Color = .{ .vga = .black };
@@ -143,12 +130,13 @@ var foreground: Color = .{ .vga = .light_gray };
 var buffer: [*]volatile anyopaque = @ptrFromInt(0xB8000);
 var cursor_pos: u32 = 0;
 
-var vbe_enabled: bool = false;
+pub var vbe_enabled: bool = false;
 
-pub fn enableVbe(framebuffer: *anyopaque, x: u32, y: u32) void {
-    buffer = @ptrCast(framebuffer);
-    width = x;
-    height = y;
-
-    vbe_enabled = true;
+pub fn printCharAt(char: u8, color: Color, x: usize, y: usize) void {
+    _ = char;
+    _ = color;
+    _ = x;
+    _ = y;
 }
+
+// pub fn clear(_: *maize.)
