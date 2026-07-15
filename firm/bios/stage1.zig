@@ -54,13 +54,13 @@ export fn firstStage() noreturn {
 
     asm volatile (
         \\push %[disk]
-        \\calll %[stage2:a]
+        \\jmp %[stage2:a]
         :
         : [disk] "{dx}" (@as(u16, drive)),
           [stage2] "i" (STAGE2_DEST),
     );
 
-    @panic("1");
+    unreachable;
 }
 
 fn puts(chars: []const u8) void {
