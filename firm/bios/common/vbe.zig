@@ -68,7 +68,7 @@ fn getVbeBlockInfo() !VbeBlockInfo {
     return vbe_info;
 }
 
-fn getVbeModeInfo(mode: u32) !VbeModeInfo {
+pub fn getVbeModeInfo(mode: u32) !VbeModeInfo {
     var mode_info: VbeModeInfo = undefined;
 
     var mode_thunk = real.Thunk{
@@ -86,7 +86,7 @@ fn getVbeModeInfo(mode: u32) !VbeModeInfo {
     return mode_info;
 }
 
-fn setVbeMode(mode: u16) !void {
+pub fn setVbeMode(mode: u16) !void {
     var set_vbe_thunk = real.Thunk{
         .eax = 0x4f02,
         .ebx = mode,
@@ -127,7 +127,7 @@ fn getBestResolution() !Resolution {
     };
 }
 
-pub fn initVbe() !void {
+pub fn initVbe() !u16 {
     var current_vbe_thunk = real.Thunk{ .eax = 0x4f03 };
     current_vbe_thunk = current_vbe_thunk.int(0x10);
     if (@as(u16, @truncate(current_vbe_thunk.eax)) != 0x004f)
@@ -155,4 +155,5 @@ pub fn initVbe() !void {
     }
 
     try setVbeMode(best_mode);
+    return best_mode;
 }

@@ -5,6 +5,7 @@ const cpu = @import("common/cpu.zig");
 const gdt = @import("common/gdt.zig");
 const vbe = @import("common/vbe.zig");
 const vga = @import("common/vga.zig");
+const console = @import("console.zig");
 
 // Root declarations
 
@@ -72,39 +73,7 @@ const REQUIRED_FEATURES: u32 =
     @intFromEnum(cpu.Feature.pge) |
     @intFromEnum(cpu.Feature.fxsr);
 
-fn init() !void {
-    vga.clear();
-
-    if (cpu.cpuid() & REQUIRED_FEATURES != REQUIRED_FEATURES)
-        return error.MissingFeatures;
-
-    try vbe.initVbe();
-}
-
-// const Bios = struct {
-//     vbe_enabled: bool,
-//
-//     fn firm(self: *@This()) maize.Firm {
-//         return .{
-//             .ptr = self,
-//             .vtable = &.{
-//                 .init = init,
-//                 .setResolution = resolution,
-//             },
-//         };
-//     }
-//
-//     fn init(_: *anyopaque) anyerror!void {
-//         vga.clear();
-//
-//         if (cpu.cpuid() & REQUIRED_FEATURES != REQUIRED_FEATURES)
-//             return error.MissingFeatures;
-//
-//         try vbe.initVbe();
-//     }
-//
-//     fn resolution(_: *anyopaque) !void {}
-// };
+fn init() !void {}
 
 export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
     asm volatile (
@@ -134,6 +103,17 @@ export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
 fn secondStage(drive: u8) callconv(.{ .x86_sysv = .{} }) noreturn {
     _ = drive;
     a20.enable() catch @panic("Enabling A20 failed.");
+
+    if (cpu.cpuid() & REQUIRED_FEATURES != REQUIRED_FEATURES)
+        @panic("Missing necessary CPU features.");
+
+    vga.clear();
+    const mode = vbe.initVbe() catch @panic("Failed to intialize VESA/VBE.");
+    console.setMode(mode) catch @panic("test");
+
+    const msg: []const u8 = "Hello world!";
+    for (msg, 0..) |char, i|
+        console.printCharAt(char, i * 10, 0, 0xFF555555, 0xFF000000);
 
     maize.run(&bios_firm) catch |e| @panic(@errorName(e));
 
