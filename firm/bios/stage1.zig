@@ -42,7 +42,7 @@ export fn firstStage() noreturn {
 
     asm volatile (
         \\push %[disk]
-        \\jmp %[stage2:a]
+        \\calll %[stage2:a]
         :
         : [disk] "{dx}" (@as(u16, drive)),
           [stage2] "i" (STAGE2_DEST),
