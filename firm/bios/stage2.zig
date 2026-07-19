@@ -108,14 +108,9 @@ fn secondStage(drive: u8) callconv(.{ .x86_sysv = .{} }) noreturn {
         @panic("Missing necessary CPU features.");
 
     vga.clear();
+
     const mode = vbe.initVbe() catch @panic("Failed to intialize VESA/VBE.");
     console.setMode(mode) catch @panic("test");
-
-    const msg: []const u8 = "Hello world!";
-    for (msg, 0..) |char, i|
-        console.printCharAt(char, i * 10, 0, 0xFF555555, 0xFF000000);
-
-    maize.run(&bios_firm) catch |e| @panic(@errorName(e));
 
     @panic("Entry 2");
 }
