@@ -9,6 +9,11 @@ pub const BiosStages = struct {
 };
 
 pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
+    switch (arch) {
+        .x86, .x86_64 => {},
+        else => std.debug.panic("BIOS bootloader does not support {s} architecture", .{@tagName(arch.toStdArch())}),
+    }
+
     const src_dir = b.path("firm");
     const bios_dir = src_dir.path(b, "bios");
 
