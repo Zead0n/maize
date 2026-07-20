@@ -23,14 +23,14 @@ pub fn build(b: *std.Build) void {
     const stage1_asm_install = b.addInstallFileWithDir(stages.stage1.getEmittedAsm(), bios_install_dir, "stage1.asm");
     const stage1_elf_install = b.addInstallFileWithDir(stage1_elf, bios_install_dir, "stage1.elf");
     const stage1_bin_install = b.addInstallFileWithDir(stage1_bin.getOutput(), bios_install_dir, "stage1.bin");
-    stage1_bin_install.step.dependOn(&stage1_bin.step);
+    // stage1_bin_install.step.dependOn(&stage1_bin.step);
 
     const stage2_elf = stages.stage2.getEmittedBin();
     const stage2_bin = b.addObjCopy(stage2_elf, .{ .format = .bin });
     const stage2_asm_install = b.addInstallFileWithDir(stages.stage2.getEmittedAsm(), bios_install_dir, "stage2.asm");
     const stage2_elf_install = b.addInstallFileWithDir(stage2_elf, bios_install_dir, "stage2.elf");
     const stage2_bin_install = b.addInstallFileWithDir(stage2_bin.getOutput(), bios_install_dir, "stage2.bin");
-    stage2_bin_install.step.dependOn(&stage2_bin.step);
+    // stage2_bin_install.step.dependOn(&stage2_bin.step);
 
     bios_disect_step.dependOn(&stage1_asm_install.step);
     bios_disect_step.dependOn(&stage1_elf_install.step);
