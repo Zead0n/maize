@@ -1,6 +1,5 @@
 const sys = @import("sys.zig");
 const real = @import("real.zig");
-const console = @import("console.zig");
 
 const VbeBlockInfo = extern struct {
     signature: [4]u8,
@@ -94,8 +93,6 @@ pub fn setVbeMode(mode: u16) !void {
     set_vbe_thunk = set_vbe_thunk.int(0x10);
     if (@as(u16, @truncate(set_vbe_thunk.eax)) != 0x004f)
         return error.SetMode;
-
-    console.vbe_enabled = true;
 }
 
 fn getCurrentMode() !u16 {

@@ -1,4 +1,5 @@
 const std = @import("std");
+const color = @import("color.zig");
 
 const VGA_WIDTH = 80;
 const VGA_HEIGHT = 25;
@@ -9,30 +10,11 @@ var g_column: usize = 0;
 var g_color: Color = .init(.light_gray, .black);
 var g_buffer = @as([*]volatile u16, @ptrFromInt(0xb8000));
 
-pub const ColorType = enum(u4) {
-    black = 0,
-    blue = 1,
-    green = 2,
-    cyan = 3,
-    red = 4,
-    magenta = 5,
-    brown = 6,
-    light_gray = 7,
-    dark_gray = 8,
-    light_blue = 9,
-    light_green = 10,
-    light_cyan = 11,
-    light_red = 12,
-    light_magenta = 13,
-    light_brown = 14,
-    white = 15,
-};
-
 const Color = packed struct(u8) {
-    fg: ColorType,
-    bg: ColorType,
+    fg: color.VgaColor,
+    bg: color.VgaColor,
 
-    pub fn init(fg: ColorType, bg: ColorType) Color {
+    pub fn init(fg: color.VgaColor, bg: color.VgaColor) Color {
         return .{ .fg = fg, .bg = bg };
     }
 
@@ -41,7 +23,7 @@ const Color = packed struct(u8) {
     }
 };
 
-pub fn setColor(fg: ColorType, bg: ColorType) void {
+pub fn setColor(fg: color.VgaColor, bg: color.VgaColor) void {
     g_color = Color.init(fg, bg);
 }
 
@@ -49,9 +31,13 @@ pub fn clear() void {
     @memset(g_buffer[0..VGA_SIZE], Color.getVgaChar(g_color, ' '));
 }
 
-pub fn printCharAt(char: u8, color: Color, x: usize, y: usize) void {
+pub fn printCharAt(char: u8, x: usize, y: usize, fg: color.VgaColor, bg: color.VgaColor) void {
     const index = y * VGA_WIDTH + x;
-    g_buffer[index] = color.getVgaChar(char);
+    const colo = Color{
+        .fg = fg,
+        .bg = bg,
+    };
+    g_buffer[index] = colo.getVgaChar(char);
 }
 
 fn checkAndScroll() void {
@@ -68,7 +54,7 @@ pub fn printChar(char: u8) void {
             checkAndScroll();
         },
         else => {
-            printCharAt(char, g_color, g_column, g_row);
+            printCharAt(char, g_column, g_row, g_color.fg, g_color.fg);
             g_column += 1;
             if (g_column == VGA_WIDTH) {
                 g_column = 0;

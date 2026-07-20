@@ -1,6 +1,4 @@
-// const maize = @import("maize");
-
-const VgaColor = enum(u4) {
+pub const VgaColor = enum(u4) {
     black = 0,
     blue = 1,
     green = 2,
@@ -38,33 +36,77 @@ const VgaColor = enum(u4) {
             .white => 0xFFFFFFFF,
         };
     }
+
+    pub fn fromRgb(value: u32) @This() {
+        const rgb: u24 = @truncate(value);
+
+        return switch (rgb) {
+            0x000000 => .black,
+            0x0000AA => .blue,
+            0x00AA00 => .green,
+            0x00AAAA => .cyan,
+            0xAA0000 => .red,
+            0xAA00AA => .magenta,
+            0xAA5500 => .brown,
+            0xAAAAAA => .light_gray,
+            0x555555 => .dark_gray,
+            0x5555FF => .light_blue,
+            0x55FF55 => .light_green,
+            0x55FFFF => .light_cyan,
+            0xFF5555 => .light_red,
+            0xFF55FF => .light_magenta,
+            0xFFFF55 => .light_brown,
+            0xFFFFFF => .white,
+            else => .light_gray,
+        };
+    }
 };
 
-const RgbLevel = struct {
+const Level = enum(u2) {
+    None,
+    Low,
+    High,
+
+    fn from(value: u8) @This() {
+        return switch (value) {
+            0x00 => .None,
+            0x01...0x80 => .Low,
+            0x81...0xFF => .High,
+        };
+    }
+};
+
+const RgbLevel = packed struct {
     r: Level,
     g: Level,
     b: Level,
 
-    const Level = enum(u2) {
-        None,
-        Low,
-        High,
-
-        fn from(value: u8) @This() {
-            return switch (value) {
-                0x00 => .None,
-                0x01...0x80 => .Low,
-                0x81...0xFF => .High,
-            };
-        }
-    };
-
-    fn toVgaColor(value: u32) VgaColor {
-        const level = RgbLevel{
-            .r = Level.from(@truncate(value >> 16)),
-            .g = Level.from(@truncate(value >> 8)),
-            .b = Level.from(@truncate(value)),
+    fn fromRgb(rgba: Rgba) @This() {
+        return .{
+            .r = Level.from(rgba.r),
+            .g = Level.from(rgba.g),
+            .b = Level.from(rgba.b),
         };
+    }
+};
+
+pub const Rgba = struct {
+    r: u8,
+    g: u8,
+    b: u8,
+    a: u8,
+
+    pub fn fromValue(value: u32) @This() {
+        return .{
+            .b = @truncate(value),
+            .g = @truncate(value >> 8),
+            .r = @truncate(value >> 16),
+            .a = @truncate(value >> 24),
+        };
+    }
+
+    pub fn toVgaColor(self: @This()) VgaColor {
+        const level = RgbLevel.fromRgb(self);
 
         return switch (level) {
             .{ .r = .None, .g = .None, .b = .None } => VgaColor.black,
@@ -118,25 +160,7 @@ const Color = union {
     pub fn toVga(self: @This()) VgaColor {
         return switch (self) {
             .vga => |vga| vga,
-            .argb => |value| RgbLevel.toVgaColor(value),
+            .argb => |value| Rgba.fromValue(value).toVgaColor(),
         };
     }
 };
-
-var width: u32 = 80;
-var height: u32 = 25;
-var background: Color = .{ .vga = .black };
-var foreground: Color = .{ .vga = .light_gray };
-var buffer: [*]volatile anyopaque = @ptrFromInt(0xB8000);
-var cursor_pos: u32 = 0;
-
-pub var vbe_enabled: bool = false;
-
-pub fn printCharAt(char: u8, color: Color, x: usize, y: usize) void {
-    _ = char;
-    _ = color;
-    _ = x;
-    _ = y;
-}
-
-// pub fn clear(_: *maize.)
