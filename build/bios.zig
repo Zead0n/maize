@@ -37,7 +37,7 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
     const maize_mod = b.createModule(.{
         .target = b.resolveTargetQuery(arch.getTargetQuery(.none)),
         .optimize = .ReleaseSmall,
-        .root_source_file = b.path("core/main.zig"),
+        .root_source_file = b.path("core/root.zig"),
     });
 
     const stage2_mod = b.createModule(.{
