@@ -28,24 +28,39 @@ fn biosLogFn(
 
     switch (level) {
         .debug => {
-            term.setColor(VgaColor.light_cyan.toArgb(), VgaColor.black.toArgb());
+            term.setColor(
+                VgaColor.light_cyan.toArgb(),
+                VgaColor.black.toArgb(),
+            );
             term.print("DBUG");
         },
         .info => {
-            term.setColor(VgaColor.light_blue.toArgb(), VgaColor.black.toArgb());
+            term.setColor(
+                VgaColor.light_blue.toArgb(),
+                VgaColor.black.toArgb(),
+            );
             term.print("INFO");
         },
         .warn => {
-            term.setColor(VgaColor.light_magenta.toArgb(), VgaColor.black.toArgb());
+            term.setColor(
+                VgaColor.light_magenta.toArgb(),
+                VgaColor.black.toArgb(),
+            );
             term.print("WARN");
         },
         .err => {
-            term.setColor(VgaColor.light_red.toArgb(), VgaColor.black.toArgb());
+            term.setColor(
+                VgaColor.light_red.toArgb(),
+                VgaColor.black.toArgb(),
+            );
             term.print("ERR ");
         },
     }
 
-    term.setColor(VgaColor.light_gray.toArgb(), VgaColor.black.toArgb());
+    term.setColor(
+        VgaColor.light_gray.toArgb(),
+        VgaColor.black.toArgb(),
+    );
     term.print("]: ");
     term.print(fmt, args);
     term.printChar('\n');
@@ -54,9 +69,15 @@ fn biosLogFn(
 pub const panic = std.debug.FullPanic(panicFn);
 fn panicFn(msg: []const u8, _: ?usize) noreturn {
     term.print("[");
-    term.setColor(VgaColor.red.toArgb(), VgaColor.black.toArgb());
+    term.setColor(
+        VgaColor.red.toArgb(),
+        VgaColor.black.toArgb(),
+    );
     term.print("PANIC");
-    term.setColor(VgaColor.light_gray.toArgb(), VgaColor.black.toArgb());
+    term.setColor(
+        VgaColor.light_gray.toArgb(),
+        VgaColor.black.toArgb(),
+    );
     term.print("]: ");
     term.print(msg);
 
