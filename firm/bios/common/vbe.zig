@@ -88,7 +88,7 @@ pub fn getVbeModeInfo(mode: u32) !VbeModeInfo {
 pub fn setVbeMode(mode: u16) !void {
     var set_vbe_thunk = real.Thunk{
         .eax = 0x4f02,
-        .ebx = mode,
+        .ebx = (mode | 0x4000),
     };
     set_vbe_thunk = set_vbe_thunk.int(0x10);
     if (@as(u16, @truncate(set_vbe_thunk.eax)) != 0x004f)
