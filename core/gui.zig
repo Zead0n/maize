@@ -1,3 +1,4 @@
+const std = @import("std");
 const fonts = @import("bitfont.zig").fonts;
 
 pub const Gui = struct {

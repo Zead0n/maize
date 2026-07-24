@@ -5,19 +5,21 @@ const vbe = @import("common/vbe.zig");
 const vga = @import("common/vga.zig");
 const color = @import("common/color.zig");
 
-// var width: u32 = 80;
-// var height: u32 = 25;
-// var buffer: [*]volatile anyopaque = @ptrFromInt(0xB8000);
-// var cursor_pos: u32 = 0;
+var buffer: [4096]u8 = undefined;
+pub var term: maize.Term = maize.Term.init(.{
+    .width = 80,
+    .height = 25,
+    .char_width = 1,
+    .char_height = 1,
+    .buffer = &buffer,
+    .frame_buffer = 0xB8000,
+    .vtable = &.{
+        .printCharAt = vga.printCharAt,
+        .clear = vga.clear,
+    },
+});
 
-const Output = union(enum) {
-    gui: maize.Gui,
-    vga,
-};
-
-var output: Output = .vga;
-
-pub fn setMode(mode: u16) !void {
+pub fn setMode(mode: u16) !*maize.Gui {
     try vbe.setVbeMode(mode);
     const mode_info = try vbe.getVbeModeInfo(mode);
     const gui: maize.Gui = .{
@@ -36,20 +38,6 @@ pub fn setMode(mode: u16) !void {
         .base_ptr = mode_info.framebuffer,
     };
 
-    output = .{ .gui = gui };
+    term = gui;
+    return &term;
 }
-
-pub fn printCharAt(char: u8, x: usize, y: usize, fg: u32, bg: u32) void {
-    switch (output) {
-        .gui => |gui| gui.printCharAt(char, x, y, fg, bg),
-        .vga => vga.printCharAt(
-            char,
-            x,
-            y,
-            color.VgaColor.fromRgb(fg),
-            color.VgaColor.fromRgb(bg),
-        ),
-    }
-}
-
-// pub fn clear(_: *maize.)

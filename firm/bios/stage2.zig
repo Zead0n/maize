@@ -6,6 +6,11 @@ const gdt = @import("common/gdt.zig");
 const vbe = @import("common/vbe.zig");
 const vga = @import("common/vga.zig");
 const console = @import("console.zig");
+const color = @import("common/color.zig");
+
+const VgaColor = color.VgaColor;
+
+const term = &console.term;
 
 // Root declarations
 
@@ -19,41 +24,41 @@ fn biosLogFn(
     comptime fmt: []const u8,
     args: anytype,
 ) void {
-    vga.printString(" [");
+    term.print(" [");
 
     switch (level) {
         .debug => {
-            vga.setColor(.light_cyan, .black);
-            vga.printString("DBUG");
+            term.setColor(VgaColor.light_cyan.toArgb(), VgaColor.black.toArgb());
+            term.print("DBUG");
         },
         .info => {
-            vga.setColor(.light_blue, .black);
-            vga.printString("INFO");
+            term.setColor(VgaColor.light_blue.toArgb(), VgaColor.black.toArgb());
+            term.print("INFO");
         },
         .warn => {
-            vga.setColor(.light_magenta, .black);
-            vga.printString("WARN");
+            term.setColor(VgaColor.light_magenta.toArgb(), VgaColor.black.toArgb());
+            term.print("WARN");
         },
         .err => {
-            vga.setColor(.light_red, .black);
-            vga.printString("ERR ");
+            term.setColor(VgaColor.light_red.toArgb(), VgaColor.black.toArgb());
+            term.print("ERR ");
         },
     }
 
-    vga.setColor(.light_gray, .black);
-    vga.printString("]: ");
-    vga.print(fmt, args);
-    vga.printChar('\n');
+    term.setColor(VgaColor.light_gray.toArgb(), VgaColor.black.toArgb());
+    term.print("]: ");
+    term.print(fmt, args);
+    term.printChar('\n');
 }
 
 pub const panic = std.debug.FullPanic(panicFn);
 fn panicFn(msg: []const u8, _: ?usize) noreturn {
-    vga.printString("[");
-    vga.setColor(.red, .black);
-    vga.printString("PANIC");
-    vga.setColor(.light_gray, .black);
-    vga.printString("]: ");
-    vga.printString(msg);
+    term.print("[");
+    term.setColor(VgaColor.red.toArgb(), VgaColor.black.toArgb());
+    term.print("PANIC");
+    term.setColor(VgaColor.light_gray.toArgb(), VgaColor.black.toArgb());
+    term.print("]: ");
+    term.print(msg);
 
     while (true)
         asm volatile ("hlt");
@@ -107,10 +112,10 @@ fn secondStage(drive: u8) callconv(.{ .x86_sysv = .{} }) noreturn {
     if (cpu.cpuid() & REQUIRED_FEATURES != REQUIRED_FEATURES)
         @panic("Missing necessary CPU features.");
 
-    vga.clear();
+    term.clear();
+    term.print("Hello from maize\n");
 
-    const mode = vbe.initVbe() catch @panic("Failed to intialize VESA/VBE.");
-    console.setMode(mode) catch @panic("test");
+    // maize.run(&bios_firm) catch |e| @panic(@errorName(e));
 
     @panic("Entry 2");
 }

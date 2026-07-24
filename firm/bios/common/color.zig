@@ -16,7 +16,7 @@ pub const VgaColor = enum(u4) {
     light_brown = 14,
     white = 15,
 
-    fn toArgb(self: @This()) u32 {
+    pub fn toArgb(self: @This()) u32 {
         return switch (self) {
             .black => 0xFF000000,
             .blue => 0xFF0000AA,
