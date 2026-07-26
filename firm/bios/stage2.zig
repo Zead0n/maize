@@ -12,8 +12,6 @@ const VgaColor = color.VgaColor;
 
 const term = &console.term;
 
-// Root declarations
-
 pub const std_options: std.Options = .{
     .logFn = biosLogFn,
 };
@@ -87,18 +85,6 @@ fn panicFn(msg: []const u8, _: ?usize) noreturn {
     unreachable;
 }
 
-// Bios firm
-
-const bios_firm = maize.Firm{
-    .init = init,
-};
-
-const REQUIRED_FEATURES: u32 =
-    @intFromEnum(cpu.Feature.fpu) |
-    @intFromEnum(cpu.Feature.pse) |
-    @intFromEnum(cpu.Feature.pge) |
-    @intFromEnum(cpu.Feature.fxsr);
-
 fn init() !void {}
 
 export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
@@ -126,6 +112,12 @@ export fn _start() linksection(".text.entry") callconv(.naked) noreturn {
     );
 }
 
+const REQUIRED_FEATURES: u32 =
+    @intFromEnum(cpu.Feature.fpu) |
+    @intFromEnum(cpu.Feature.pse) |
+    @intFromEnum(cpu.Feature.pge) |
+    @intFromEnum(cpu.Feature.fxsr);
+
 fn secondStage(drive: u8) callconv(.{ .x86_sysv = .{} }) noreturn {
     _ = drive;
     a20.enable() catch @panic("Enabling A20 failed.");
@@ -135,8 +127,6 @@ fn secondStage(drive: u8) callconv(.{ .x86_sysv = .{} }) noreturn {
 
     term.clear();
     term.print("Hello from maize\n");
-
-    // maize.run(&bios_firm) catch |e| @panic(@errorName(e));
 
     @panic("Entry 2");
 }
