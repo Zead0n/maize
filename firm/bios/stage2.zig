@@ -4,7 +4,6 @@ const a20 = @import("common/a20.zig");
 const cpu = @import("common/cpu.zig");
 const gdt = @import("common/gdt.zig");
 const vbe = @import("common/vbe.zig");
-const vga = @import("common/vga.zig");
 const console = @import("console.zig");
 const color = @import("common/color.zig");
 
