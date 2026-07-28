@@ -125,7 +125,6 @@ fn secondStage(drive: u8) callconv(.{ .x86_sysv = .{} }) noreturn {
         @panic("Missing necessary CPU features.");
 
     term.clear();
-    term.print("Hello from maize\n");
 
     @panic("Entry 2");
 }
