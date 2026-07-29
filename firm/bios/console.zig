@@ -1,11 +1,11 @@
-const maize = @import("maize");
+const core = @import("core");
 const fonts = @import("common/bitfont.zig").fonts;
 const real = @import("common/real.zig");
 const vbe = @import("common/vbe.zig");
 const color = @import("common/color.zig");
 
 var buffer: [4096]u8 = undefined;
-pub var term: maize.Term = maize.Term.init(.{
+pub var term: core.Term = core.Term.init(.{
     .width = 80,
     .height = 25,
     .char_width = 1,
@@ -18,10 +18,10 @@ pub var term: maize.Term = maize.Term.init(.{
     },
 });
 
-pub fn setMode(mode: u16) !*maize.Gui {
+pub fn setMode(mode: u16) !*core.Gui {
     try vbe.setVbeMode(mode);
     const mode_info = try vbe.getVbeModeInfo(mode);
-    const gui: maize.Gui = .{
+    const gui: core.Gui = .{
         .id = mode,
         .pitch = mode_info.pitch,
         .width = mode_info.res_width,
@@ -50,7 +50,7 @@ const Color = packed struct(u8) {
     }
 };
 
-pub fn vgaClear(vgaTerm: *maize.Term) void {
+pub fn vgaClear(vgaTerm: *core.Term) void {
     const fg_vga = color.VgaColor.fromRgb(vgaTerm.foreground);
     const bg_vga = color.VgaColor.fromRgb(vgaTerm.background);
     const colo = Color{
@@ -62,7 +62,7 @@ pub fn vgaClear(vgaTerm: *maize.Term) void {
     @memset(frame_ptr[0 .. vgaTerm.width * vgaTerm.height], colo.getVgaChar(' '));
 }
 
-pub fn vgaPrintCharAt(vgaTerm: *maize.Term, char: u8, x: usize, y: usize) void {
+pub fn vgaPrintCharAt(vgaTerm: *core.Term, char: u8, x: usize, y: usize) void {
     const index = y * vgaTerm.width + x;
     const fg_vga = color.VgaColor.fromRgb(vgaTerm.foreground);
     const bg_vga = color.VgaColor.fromRgb(vgaTerm.background);

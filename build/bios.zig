@@ -39,7 +39,7 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
     });
     stage1_elf.setLinkerScript(bios_dir.path(b, "linkers/stage1_hdd.ld"));
 
-    const maize_mod = b.createModule(.{
+    const core_mod = b.createModule(.{
         .target = b.resolveTargetQuery(arch.getTargetQuery(.none)),
         .optimize = .ReleaseSmall,
         .root_source_file = b.path("core/root.zig"),
@@ -51,7 +51,7 @@ pub fn buildBiosStages(b: *std.Build, arch: arch_util.Architecture) BiosStages {
         .root_source_file = bios_dir.path(b, "stage2.zig"),
     });
     stage2_mod.addAssemblyFile(bios_dir.path(b, "asm/real.S"));
-    stage2_mod.addImport("maize", maize_mod);
+    stage2_mod.addImport("core", core_mod);
 
     const stage2_elf = b.addExecutable(.{
         .name = "stage2.elf",

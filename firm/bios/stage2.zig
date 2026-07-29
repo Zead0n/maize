@@ -1,5 +1,5 @@
 const std = @import("std");
-const maize = @import("maize");
+const core = @import("core");
 const a20 = @import("common/a20.zig");
 const cpu = @import("common/cpu.zig");
 const gdt = @import("common/gdt.zig");
