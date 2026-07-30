@@ -48,17 +48,17 @@ pub const Term = struct {
         };
     }
 
-    pub fn clear(self: *@This()) void {
+    pub fn clear(self: *Self) void {
         self.vtable.clear(self);
     }
 
-    fn checkAndScroll(self: *@This()) void {
+    fn checkAndScroll(self: *Self) void {
         if (self.cursor_y == self.height / self.char_height) {
             self.cursor_y = 0;
         }
     }
 
-    pub fn printChar(self: *@This(), char: u8) void {
+    pub fn printChar(self: *Self, char: u8) void {
         switch (char) {
             '\n' => {
                 self.cursor_x = 0;
@@ -77,19 +77,19 @@ pub const Term = struct {
         }
     }
 
-    pub fn print(self: *@This(), str: []const u8) void {
+    pub fn print(self: *Self, str: []const u8) void {
         for (str) |char|
             self.writer.printAsciiChar(char, .{}) catch continue;
 
         self.writer.flush() catch return;
     }
 
-    pub fn printf(self: *@This(), comptime fmt: []const u8, args: anytype) void {
+    pub fn printf(self: *Self, comptime fmt: []const u8, args: anytype) void {
         self.writer.print(fmt, args) catch return;
         self.writer.flush() catch return;
     }
 
-    pub fn setColor(self: *@This(), fg: u32, bg: u32) void {
+    pub fn setColor(self: *Self, fg: u32, bg: u32) void {
         self.foreground = fg;
         self.background = bg;
     }
