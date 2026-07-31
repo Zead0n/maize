@@ -22,8 +22,14 @@ pub const Term = struct {
     char_height: u16,
     vtable: *const TermVtable,
     frame_buffer: usize,
-
     writer: std.Io.Writer,
+
+    red_mask_len: u8 = 0,
+    red_mask_pos: u8 = 0,
+    green_mask_len: u8 = 0,
+    green_mask_pos: u8 = 0,
+    blue_mask_len: u8 = 0,
+    blue_mask_pos: u8 = 0,
     cursor_x: u16 = 0,
     cursor_y: u16 = 0,
     foreground: u32 = 0xFFAAAAAA,
